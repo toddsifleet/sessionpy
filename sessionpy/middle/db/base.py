@@ -14,7 +14,7 @@ class Connection(object):
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
   create_sql = 'CREATE TABLE {table_name} ({columns})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
-  bind_char = '?'
+  bind_char = '%s'
 
   def __init__(self, *args, **kwargs):
     self.connect(*args, **kwargs)
@@ -43,6 +43,10 @@ class Connection(object):
       columns = ", ".join(columns),
       values = ", ".join([self.bind_char for x in columns])
     )
+    return self.last_row_id()
+
+  def last_row_id(self):
+    return self.cursor.lastrowid
 
   @transaction
   def update(self, table_name, id, **data):
@@ -58,7 +62,7 @@ class Connection(object):
     columns  = (self.primary_key_sql,) + tuple([c + " " + self.text_sql for c in columns])
     self.sql(self.create_sql,
       table_name =  table_name,
-      columns = ", ".join(columns)
+      columns = ", ".join(columns),
     )
 
   @transaction

@@ -33,8 +33,8 @@ class Model(object):
       setattr(self, c, v)
 
   def insert(self):
-    values = zip(self.columns, self.values())[1::]
-    self.db.insert(
+    values = dict(zip(self.columns, self.values())[1::])
+    self.id = self.db.insert(
       self.table_name,
       **values
     )
