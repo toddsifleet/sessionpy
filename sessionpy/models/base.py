@@ -79,8 +79,7 @@ class Model(object):
   @classmethod
   def _from_row(cls, row):
     if row:
-      attrs = dict([(k, v) for k,v in zip(cls.columns, row)])
-      return cls(**attrs)
+      return cls(**row)
 
   @classmethod
   def sql(cls, input, binds = ()):

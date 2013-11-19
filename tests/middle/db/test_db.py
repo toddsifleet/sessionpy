@@ -27,25 +27,22 @@ class Base(object):
     self.insert_dummy_row()
 
     result = self.db.select('test_table', 'c1', 'c1-v0')
-    assert result[2] == 'c2-v0'
+    assert result['c2'] == 'c2-v0'
 
   def test_insert(self):
-    result = self.db.select('test_table', 'c1', 'c1-v0')
-    assert result == None
-
     id = self.db.insert('test_table',
       c1 = 'v1',
       c2 = 'v2'
     )
 
     result = self.db.select('test_table', 'id', id)
-    assert result[2] == 'v2'
+    assert result['c2'] == 'v2'
 
   def test_update(self):
     id = self.insert_dummy_row()
     self.db.update('test_table', id,  c1 = 'c1-update')
     result = self.db.select('test_table', 'id', id)
-    assert result[1] == 'c1-update'
+    assert result['c1'] == 'c1-update'
 
   def test_delete(self):
     id = self.insert_dummy_row()

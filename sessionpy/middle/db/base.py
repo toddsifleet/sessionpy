@@ -20,14 +20,14 @@ class Connection(object):
     self.connect(*args, **kwargs)
 
   def select(self, table_name, column, value):
-    data = {
-      'column': column,
-      'table_name': table_name
-    }
     self.sql(self.select_sql, value,
       column = column,
       table_name = table_name
     )
+
+    return self.get_row()
+
+  def get_row(self):
     return self.cursor.fetchone()
 
   @transaction
