@@ -16,3 +16,5 @@ class Connection(Connection):
     self.connection.row_factory = dict_factory
     self.cursor = self.connection.cursor()
 
+  def string_sql(self, *args, **kwargs):
+    return ''

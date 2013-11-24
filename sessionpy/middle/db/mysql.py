@@ -17,8 +17,6 @@ class Connection(Connection):
     )
     self.cursor = self.connection.cursor()
 
-  def string_sql(self, *args, **kwargs):
-    return 'VARCHAR(240)'
 
   def datetime_sql(self, *args, **kwargs):
     return 'TIMESTAMP'

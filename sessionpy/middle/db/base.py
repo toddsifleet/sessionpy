@@ -88,14 +88,24 @@ class Connection(object):
     return self.cursor.execute(sql, tuple(map(str, binds)))
 
   def column_sql(self, name, data_type, args = None):
-    sql = name + ' ' + getattr(self, data_type + '_sql')()
-    if args:
-      for k in args:
-        sql += ' ' + getattr(self, k + '_sql')()
+    if args is None: args = {}
+
+    sql = name + ' ' + self.get_type_sql(data_type, **args)
+    if 'constraints' in args:
+      sql +=  self.constraints_sql(**args)
     return sql
 
+  def constraints_sql(self, **options):
+      constraints = options.get('constraints', [])
+      constraints = [self.get_type_sql(k, **options) for k in constraints]
+      return ' ' + ' '.join(constraints)
+
+  def get_type_sql(self, name, **args):
+    return getattr(self, name + '_sql')(**args)
+
   def string_sql(self, *args, **kwargs):
-    return ''
+    length = kwargs['length'] if 'length' in kwargs else 20
+    return 'VARCHAR({length})'.format(length = length)
 
   def integer_sql(self, *args, **kwargs):
     return 'INTEGER'

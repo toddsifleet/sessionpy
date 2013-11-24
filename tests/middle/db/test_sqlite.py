@@ -12,3 +12,7 @@ class TestClass(Base):
   @classmethod
   def disconnect(cls):
     os.unlink(cls.file_handle.name)
+
+  def test_length_of_string(self):
+    # sqlite cannot support this
+    pass
