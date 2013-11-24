@@ -18,3 +18,5 @@ class Connection(Connection):
     )
     self.cursor = self.connection.cursor()
 
+  def datetime(self, *args, **kwargs):
+    return 'DATETIME'

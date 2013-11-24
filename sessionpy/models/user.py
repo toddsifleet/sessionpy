@@ -5,10 +5,10 @@ from models.base import Model
 
 class User(Model):
   columns = (
-    'username',
-    'password',
-    'salt',
-    'email',
+    ('username', 'string'),
+    ('password', 'string'),
+    ('salt', 'string'),
+    ('email', 'string')
   )
 
   @classmethod

@@ -6,34 +6,43 @@ class ModelMeta(type):
     type.__init__(self, *args)
     if hasattr(self, 'columns'):
       self.update_columns()
+      self.set_column_names()
       self.add_filters()
     self.set_table_name(args[0])
 
   def update_columns(self):
-    self.columns = ('id', ) + self.columns + self.audit_columns
+    self.columns = (('id', 'primary_key'), ) + self.columns + self.audit_columns
 
   def add_filters(self):
-    for c in self.columns:
+    for c in self.column_names:
       setattr(self, 'find_by_' + c, partial(self.select, c))
 
   def set_table_name(self, name):
     if not name == 'Model':
       self.table_name = name.lower() + 's'
 
+  def set_column_names(self):
+    self.column_names = [c[0] for c in self.columns]
+    self.audit_names = [c[0] for c in self.audit_columns]
+
 class Model(object):
   __metaclass__ = ModelMeta
-  audit_columns = ('created_at', 'updated_at')
+  audit_columns = (
+    ('created_at', 'datetime'),
+    ('updated_at', 'datetime')
+  )
 
   def __init__(self, **kwargs):
     self.id = None
-    for c in self.audit_columns:
+    for c in self.audit_names:
       if c not in kwargs:
         kwargs[c] = datetime.today()
     for c, v in kwargs.items():
       setattr(self, c, v)
 
   def insert(self):
-    values = dict(zip(self.columns, self.values())[1::])
+    names = [c[0] for c in self.columns]
+    values = dict(zip(names, self.values())[1::])
     self.id = self.db.insert(
       self.table_name,
       **values
@@ -41,7 +50,7 @@ class Model(object):
     return self
 
   def values(self):
-    return [getattr(self, k) for k in self.columns]
+    return [getattr(self, k[0]) for k in self.columns]
 
   def put(self):
     self.db.update(

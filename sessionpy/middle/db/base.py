@@ -59,7 +59,10 @@ class Connection(object):
 
   @transaction
   def create_table(self, table_name, *columns):
-    columns  = (self.primary_key_sql,) + tuple([c + " " + self.text_sql for c in columns])
+    names = [c[0] for c in columns]
+    types = [self.column_sql(c[1]) for c in columns]
+    columns  = (self.primary_key_sql,) +\
+      tuple([" ".join(c) for c in zip(names, types)])
     self.sql(self.create_sql,
       table_name =  table_name,
       columns = ", ".join(columns),
@@ -86,3 +89,14 @@ class Connection(object):
     print sql, binds
     return self.cursor.execute(sql, tuple(map(str, binds)))
 
+  def column_sql(self, name, *args, **kwargs):
+    return getattr(self, name)(*args, **kwargs)
+
+  def string(self, *args, **kwargs):
+    return self.text_sql
+
+  def integer(self, *args, **kwargs):
+    return 'INTEGER'
+
+  def datetime(self, *args, **kwargs):
+    return 'TIMESTAMP'

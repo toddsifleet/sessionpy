@@ -12,3 +12,4 @@ class Connection(Connection):
 
   def last_row_id(self):
     return self.cursor.fetchone()[0]
+
