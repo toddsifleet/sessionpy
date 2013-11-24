@@ -1,4 +1,5 @@
 from tests import base
+import pytest
 import datetime
 
 class Base(object):
@@ -24,6 +25,18 @@ class Base(object):
 
   def teardown(cls):
     pass
+
+  def test_unique(self):
+    self.db.drop_table('test_table')
+    self.db.create_table('test_table',
+      ('c1', 'string', {'unique': True}),
+      ('c2', 'string'),
+      ('c3', 'string')
+    )
+    self.insert_dummy_row()
+    with pytest.raises(Exception):
+      self.insert_dummy_row()
+    self.db.commit()
 
   def test_select(self):
     time = datetime.datetime.today().replace(microsecond=0)

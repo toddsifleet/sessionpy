@@ -17,6 +17,7 @@ class Connection(object):
   bind_char = '%s'
   integer_sql = 'INTEGER'
   datetime_sql = 'TIMESTAMP'
+  unique_sql = 'UNIQUE'
 
   def __init__(self, *args, **kwargs):
     self.connect(*args, **kwargs)
@@ -61,10 +62,8 @@ class Connection(object):
 
   @transaction
   def create_table(self, table_name, *columns):
-    names = [c[0] for c in columns]
-    types = [self.column_sql(c[1]) for c in columns]
     columns  = (self.primary_key_sql,) +\
-      tuple([" ".join(c) for c in zip(names, types)])
+      tuple([self.column_sql(*c) for c in columns])
     self.sql(self.create_sql,
       table_name =  table_name,
       columns = ", ".join(columns),
@@ -91,6 +90,10 @@ class Connection(object):
     print sql, binds
     return self.cursor.execute(sql, tuple(map(str, binds)))
 
-  def column_sql(self, name, *args, **kwargs):
-    return getattr(self, name + '_sql')
+  def column_sql(self, name, data_type, args = None):
+    sql = name + ' ' + getattr(self, data_type + '_sql')
+    if args:
+      for k in args:
+        sql += ' ' + getattr(self, k + '_sql')
+    return sql
 
