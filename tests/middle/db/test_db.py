@@ -1,6 +1,5 @@
-from tests import base
+from tests import base as testutils
 import pytest
-import datetime
 
 class Base(object):
   @classmethod
@@ -39,7 +38,7 @@ class Base(object):
     self.db.commit()
 
   def test_select(self):
-    time = datetime.datetime.today().replace(microsecond=0)
+    time = testutils.now()
     row = self.insert_dummy_row(c3 = time)
 
     result = self.db.select('test_table', 'c1', 'test_string')
@@ -75,7 +74,7 @@ class Base(object):
     vals = {
       'c1': 'test_string',
       'c2': 1234,
-      'c3': datetime.datetime.today()
+      'c3': testutils.now()
     }
 
     vals.update(kwargs)

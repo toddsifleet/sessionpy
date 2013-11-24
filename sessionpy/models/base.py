@@ -36,7 +36,7 @@ class Model(object):
     self.id = None
     for c in self.audit_names:
       if c not in kwargs:
-        kwargs[c] = datetime.today()
+        kwargs[c] = datetime.today().replace(microsecond=0)
     for c, v in kwargs.items():
       setattr(self, c, v)
 
