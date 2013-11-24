@@ -90,15 +90,14 @@ class Connection(object):
   def column_sql(self, name, data_type, args = None):
     if args is None: args = {}
 
-    sql = name + ' ' + self.get_type_sql(data_type, **args)
+    sql = [name, self.get_type_sql(data_type, **args)]
     if 'constraints' in args:
-      sql +=  self.constraints_sql(**args)
-    return sql
+      sql += self.constraints_sql(**args)
+    return ' '.join(sql)
 
   def constraints_sql(self, **options):
       constraints = options.get('constraints', [])
-      constraints = [self.get_type_sql(k, **options) for k in constraints]
-      return ' ' + ' '.join(constraints)
+      return [self.get_type_sql(k, **options) for k in constraints]
 
   def get_type_sql(self, name, **args):
     return getattr(self, name + '_sql')(**args)
