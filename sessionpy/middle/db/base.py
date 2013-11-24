@@ -15,9 +15,6 @@ class Connection(object):
   create_sql = 'CREATE TABLE {table_name} ({columns})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
   bind_char = '%s'
-  integer_sql = 'INTEGER'
-  datetime_sql = 'TIMESTAMP'
-  unique_sql = 'UNIQUE'
 
   def __init__(self, *args, **kwargs):
     self.connect(*args, **kwargs)
@@ -91,9 +88,20 @@ class Connection(object):
     return self.cursor.execute(sql, tuple(map(str, binds)))
 
   def column_sql(self, name, data_type, args = None):
-    sql = name + ' ' + getattr(self, data_type + '_sql')
+    sql = name + ' ' + getattr(self, data_type + '_sql')()
     if args:
       for k in args:
-        sql += ' ' + getattr(self, k + '_sql')
+        sql += ' ' + getattr(self, k + '_sql')()
     return sql
 
+  def string_sql(self, *args, **kwargs):
+    return ''
+
+  def integer_sql(self, *args, **kwargs):
+    return 'INTEGER'
+
+  def unique_sql(self, *args, **kwargs):
+    return 'UNIQUE'
+
+  def datetime_sql(self, *args, **kwargs):
+    return 'TIMESTAMP'
