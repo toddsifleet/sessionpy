@@ -96,8 +96,7 @@ class Connection(object):
     return ' '.join(sql)
 
   def constraints_sql(self, **options):
-      constraints = options.get('constraints', [])
-      return [self.get_type_sql(k, **options) for k in constraints]
+      return [self.get_type_sql(k, **options) for k in options['constraints']]
 
   def get_type_sql(self, name, **args):
     return getattr(self, name + '_sql')(**args)
