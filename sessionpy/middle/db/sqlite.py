@@ -9,7 +9,7 @@ def dict_factory(cursor, row):
 
 class Connection(Connection):
   primary_key_sql = 'id integer primary key autoincrement'
-  text_sql = ''
+  string_sql = ''
   bind_char = '?'
 
   def connect(self, db_name):

@@ -15,6 +15,8 @@ class Connection(object):
   create_sql = 'CREATE TABLE {table_name} ({columns})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
   bind_char = '%s'
+  integer_sql = 'INTEGER'
+  datetime_sql = 'TIMESTAMP'
 
   def __init__(self, *args, **kwargs):
     self.connect(*args, **kwargs)
@@ -90,13 +92,5 @@ class Connection(object):
     return self.cursor.execute(sql, tuple(map(str, binds)))
 
   def column_sql(self, name, *args, **kwargs):
-    return getattr(self, name)(*args, **kwargs)
+    return getattr(self, name + '_sql')
 
-  def string(self, *args, **kwargs):
-    return self.text_sql
-
-  def integer(self, *args, **kwargs):
-    return 'INTEGER'
-
-  def datetime(self, *args, **kwargs):
-    return 'TIMESTAMP'

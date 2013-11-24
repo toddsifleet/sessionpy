@@ -3,9 +3,10 @@ import MySQLdb.cursors
 from base import Connection
 
 class Connection(Connection):
-  primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
   create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id))'
-  text_sql = 'VARCHAR(240)'
+  primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
+  datetime_sql = 'DATETIME'
+  string_sql = 'VARCHAR(240)'
   bind_char = '%s'
 
   def connect(self, db_name):
@@ -18,5 +19,3 @@ class Connection(Connection):
     )
     self.cursor = self.connection.cursor()
 
-  def datetime(self, *args, **kwargs):
-    return 'DATETIME'
