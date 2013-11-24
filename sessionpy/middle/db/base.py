@@ -85,7 +85,7 @@ class Connection(object):
       **kwargs
     )
     print sql, binds
-    return self.cursor.execute(sql, tuple(map(str, binds)))
+    return self.cursor.execute(sql, binds)
 
   def column_sql(self, name, data_type, args = None):
     if args is None: args = {}
