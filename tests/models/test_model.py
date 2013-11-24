@@ -1,4 +1,4 @@
-from tests import base as test_utils
+from tests import test_utils
 from authenticator import Authenticator
 from middle.db import sqlite
 from models.base import Model
