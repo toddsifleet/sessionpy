@@ -7,7 +7,11 @@ def transaction(func):
     return result
   return wrapper
 
-class Connection(object):
+def Base(object):
+  def __init__(self, *args, **kwargs):
+    self.connect(*args, **kwargs)
+
+class Connection(Base):
   select_sql = 'SELECT * FROM {table_name} WHERE {column} = {bind_char}'
   delete_sql = 'DELETE FROM {table_name} WHERE id = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
@@ -16,8 +20,6 @@ class Connection(object):
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
   bind_char = '%s'
 
-  def __init__(self, *args, **kwargs):
-    self.connect(*args, **kwargs)
 
   def select(self, table_name, column, value):
     self.sql(self.select_sql, value,
