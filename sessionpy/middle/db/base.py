@@ -7,17 +7,35 @@ def transaction(func):
     return result
   return wrapper
 
-class Connection(object):
+class Base(object):
+  bind_char = '%s'
+  def __init__(self, *args, **kwargs):
+    self.connect(*args, **kwargs)
+
+  def commit(self):
+    self.connection.commit()
+
+  def start_transaction(self):
+    # self.cursor.execute('BEGIN')
+    pass
+
+  def rollback(self):
+    self.connection.rollback()
+
+  def sql(self, sql, *binds, **kwargs):
+    sql = sql.format(
+      bind_char = self.bind_char,
+      **kwargs
+    )
+    print sql, binds
+    return self.cursor.execute(sql, binds)
+
+
+class Connection(Base):
   select_sql = 'SELECT * FROM {table_name} WHERE {column} = {bind_char}'
   delete_sql = 'DELETE FROM {table_name} WHERE id = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
-  create_sql = 'CREATE TABLE {table_name} ({columns})'
-  drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
-  bind_char = '%s'
-
-  def __init__(self, *args, **kwargs):
-    self.connect(*args, **kwargs)
 
   def select(self, table_name, column, value):
     self.sql(self.select_sql, value,
@@ -57,22 +75,14 @@ class Connection(object):
       columns = columns.format(bind_char = self.bind_char)
     )
 
-  def commit(self):
-    self.connection.commit()
 
-  def start_transaction(self):
-    self.cursor.execute('BEGIN')
+class TableManager(Base):
+  create_sql = 'CREATE TABLE {table_name} ({columns})'
+  drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
 
-  def rollback(self):
-    self.connection.rollback()
-
-  def sql(self, sql, *binds, **kwargs):
-    sql = sql.format(
-      bind_char = self.bind_char,
-      **kwargs
-    )
-    print sql, binds
-    return self.cursor.execute(sql, binds)
+  def __init__(self, connection, cursor):
+    self.connection = connection
+    self.cursor = cursor
 
   @transaction
   def create_table(self, table_name, *columns):
@@ -113,3 +123,4 @@ class Connection(object):
 
   def datetime_sql(self, *args, **kwargs):
     return 'TIMESTAMP'
+

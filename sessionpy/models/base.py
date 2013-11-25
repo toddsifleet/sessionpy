@@ -101,8 +101,8 @@ class Model(object):
 
   @classmethod
   def init_table(cls):
-    cls.db.create_table(cls.table_name, *cls.columns[1:])
+    cls.db.table_manager.create_table(cls.table_name, *cls.columns[1:])
 
   @classmethod
   def drop_table(cls):
-    cls.db.drop_table(cls.table_name)
+    cls.db.table_manager.drop_table(cls.table_name)

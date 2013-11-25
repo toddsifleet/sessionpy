@@ -1,10 +1,9 @@
 import MySQLdb as mdb
 import MySQLdb.cursors
-from base import Connection
+import base
 
-class Connection(Connection):
-  create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id))'
-  primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
+
+class Connection(base.Connection):
   bind_char = '%s'
 
   def connect(self, db_name):
@@ -15,8 +14,14 @@ class Connection(Connection):
       'sessionpy_test',
       cursorclass = MySQLdb.cursors.DictCursor
     )
-    self.cursor = self.connection.cursor()
 
+    self.cursor = self.connection.cursor()
+    self.table_manager = TableManager(self.connection, self.cursor)
 
   def datetime_sql(self, *args, **kwargs):
     return 'TIMESTAMP'
+
+
+class TableManager(base.TableManager):
+  create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id))'
+  primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'

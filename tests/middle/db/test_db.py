@@ -5,6 +5,7 @@ class Base(object):
   @classmethod
   def setup_class(cls):
     cls.db = cls.connect()
+    cls.table_manager = cls.db.table_manager
 
   @classmethod
   def teardown_class(cls):
@@ -15,8 +16,8 @@ class Base(object):
     pass
 
   def setup(self):
-    self.db.drop_table('test_table')
-    self.db.create_table('test_table',
+    self.table_manager.drop_table('test_table')
+    self.table_manager.create_table('test_table',
       ('c1', 'string', {'length': 15}),
       ('c2', 'integer'),
       ('c3', 'datetime')
@@ -31,8 +32,8 @@ class Base(object):
     self.db.commit()
 
   def test_unique(self):
-    self.db.drop_table('test_table')
-    self.db.create_table('test_table',
+    self.table_manager.drop_table('test_table')
+    self.table_manager.create_table('test_table',
       ('c1', 'string', {'constraints': ['unique']}),
       ('c2', 'string'),
       ('c3', 'string')

@@ -6,9 +6,5 @@ import os
 class TestClass(Base):
   @classmethod
   def connect(cls):
-    cls.file_handle = tempfile.NamedTemporaryFile(delete = False)
-    return mysql.Connection(cls.file_handle.name)
+    return mysql.Connection('test')
 
-  @classmethod
-  def disconnect(cls):
-    os.unlink(cls.file_handle.name)
