@@ -57,19 +57,6 @@ class Connection(object):
       columns = columns.format(bind_char = self.bind_char)
     )
 
-  @transaction
-  def create_table(self, table_name, *columns):
-    columns  = (self.primary_key_sql,) +\
-      tuple([self.column_sql(*c) for c in columns])
-    self.sql(self.create_sql,
-      table_name =  table_name,
-      columns = ", ".join(columns),
-    )
-
-  @transaction
-  def drop_table(self, table_name):
-    self.sql(self.drop_table_sql, table_name = table_name)
-
   def commit(self):
     self.connection.commit()
 
@@ -87,6 +74,19 @@ class Connection(object):
     print sql, binds
     return self.cursor.execute(sql, binds)
 
+  @transaction
+  def create_table(self, table_name, *columns):
+    columns  = (self.primary_key_sql,) +\
+      tuple([self.column_sql(*c) for c in columns])
+    self.sql(self.create_sql,
+      table_name =  table_name,
+      columns = ", ".join(columns),
+    )
+
+  @transaction
+  def drop_table(self, table_name):
+    self.sql(self.drop_table_sql, table_name = table_name)
+
   def column_sql(self, name, data_type, args = None):
     if args is None: args = {}
 
@@ -102,7 +102,7 @@ class Connection(object):
     return getattr(self, name + '_sql')(**args)
 
   def string_sql(self, *args, **kwargs):
-    length = kwargs['length'] if 'length' in kwargs else 20
+    length = kwargs.get('length', 20)
     return 'VARCHAR({length})'.format(length = length)
 
   def integer_sql(self, *args, **kwargs):
