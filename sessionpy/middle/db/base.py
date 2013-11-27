@@ -77,7 +77,7 @@ class Connection(Base):
 
 
 class TableManager(Base):
-  create_sql = 'CREATE TABLE {table_name} ({columns})'
+  create_sql = 'CREATE TABLE {table_name} ({columns} {after_sql})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
 
   def __init__(self, connection, cursor):
@@ -87,22 +87,14 @@ class TableManager(Base):
   @transaction
   def create_table(self, table_name, *columns):
     foreign_keys = self.foreign_keys_sql(*columns)
-    columns  = (self.primary_key_sql,) +\
+    sql = (self.primary_key_sql,) +\
       tuple([self.column_sql(*c) for c in columns])
-
 
     self.sql(self.create_sql,
       table_name =  table_name,
-      columns = ", ".join(columns + foreign_keys),
+      columns = ", ".join(sql),
+      after_sql = self.after_create_sql(*columns),
     )
-
-  def foreign_keys_sql(self, *columns):
-    output = []
-    columns = [x for x in columns if len(x) > 2]
-    for c in [c for c in columns]:
-      if 'foreign_key' in c[2]:
-        output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
-    return tuple(output)
 
   @transaction
   def drop_table(self, table_name):
@@ -111,10 +103,10 @@ class TableManager(Base):
   def column_sql(self, name, data_type, args = None):
     if args is None: args = {}
 
-    sql = [name, self.get_type_sql(data_type, **args)]
-
-    if 'constraints' in args:
-      sql += self.constraints_sql(**args)
+    sql = [
+      name,
+      self.get_sql(data_type, **args)
+    ] + self.constraints_sql(**args)
 
     return ' '.join([x for x in sql if x])
 
@@ -126,11 +118,30 @@ class TableManager(Base):
       table_name + '(' + foreign_name + ')'
     ))
 
-  def constraints_sql(self, **options):
-      return [self.get_type_sql(k, **options) for k in options['constraints']]
+  def foreign_keys_sql(self, *columns):
+    output = []
+    columns = [x for x in columns if len(x) > 2]
+    for c in [c for c in columns]:
+      if 'foreign_key' in c[2]:
+        output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
+    return tuple(output)
 
-  def get_type_sql(self, name, **args):
-    return getattr(self, name + '_sql')(**args)
+  def after_create_sql(self, *colums):
+    keys = self.foreign_keys_sql(*colums)
+
+    if keys:
+      return ', ' + ', '.join(keys)
+    else:
+      return ''
+
+  def constraints_sql(self, **options):
+      return [self.get_sql(k, **options) for k in options]
+
+  def get_sql(self, name, **args):
+    try:
+      return getattr(self, name + '_sql')(**args)
+    except:
+      return ''
 
   def string_sql(self, *args, **kwargs):
     length = kwargs.get('length', 20)

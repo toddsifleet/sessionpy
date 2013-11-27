@@ -22,7 +22,7 @@ class Connection(base.Connection):
 
 
 class TableManager(base.TableManager):
-  create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id))'
+  create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id) {after_sql})'
   primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
 
   def integer_sql(self, *args, **kwargs):

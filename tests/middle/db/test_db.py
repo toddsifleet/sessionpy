@@ -94,7 +94,7 @@ class Constraints(Base):
 
   def test_unique(self):
     self.table_manager.create_table('test_table',
-      ('c1', 'string', {'constraints': ['unique']}),
+      ('c1', 'string', {'unique': True}),
       ('c2', 'string'),
       ('c3', 'string')
     )
