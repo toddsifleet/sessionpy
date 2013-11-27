@@ -5,7 +5,6 @@ import base
 
 class Connection(base.Connection):
   bind_char = '%s'
-
   def connect(self, db_name):
     self.connection = mdb.connect(
       'localhost',
@@ -25,3 +24,6 @@ class Connection(base.Connection):
 class TableManager(base.TableManager):
   create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id))'
   primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
+
+  def integer_sql(self, *args, **kwargs):
+    return 'MEDIUMINT'

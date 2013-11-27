@@ -86,12 +86,23 @@ class TableManager(Base):
 
   @transaction
   def create_table(self, table_name, *columns):
+    foreign_keys = self.foreign_keys_sql(*columns)
     columns  = (self.primary_key_sql,) +\
       tuple([self.column_sql(*c) for c in columns])
+
+
     self.sql(self.create_sql,
       table_name =  table_name,
-      columns = ", ".join(columns),
+      columns = ", ".join(columns + foreign_keys),
     )
+
+  def foreign_keys_sql(self, *columns):
+    output = []
+    columns = [x for x in columns if len(x) > 2]
+    for c in [c for c in columns]:
+      if 'foreign_key' in c[2]:
+        output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
+    return tuple(output)
 
   @transaction
   def drop_table(self, table_name):
@@ -101,9 +112,19 @@ class TableManager(Base):
     if args is None: args = {}
 
     sql = [name, self.get_type_sql(data_type, **args)]
+
     if 'constraints' in args:
       sql += self.constraints_sql(**args)
-    return ' '.join(sql)
+
+    return ' '.join([x for x in sql if x])
+
+  def foreign_key_sql(self, column_name, table_name, foreign_name = 'id'):
+    return ' '.join((
+      'FOREIGN KEY',
+      '(' + column_name + ')',
+      'REFERENCES',
+      table_name + '(' + foreign_name + ')'
+    ))
 
   def constraints_sql(self, **options):
       return [self.get_type_sql(k, **options) for k in options['constraints']]

@@ -28,14 +28,18 @@ class Base(object):
   def drop_table(self, table_name):
     self.table_manager.drop_table(table_name)
 
-class Query(Base):
-  def setup(self):
+  def create_test_table(self):
+    self.drop_table('test_child_table')
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
       ('c1', 'string'),
       ('c2', 'integer'),
       ('c3', 'datetime')
     )
+
+class Query(Base):
+  def setup(self):
+    self.create_test_table()
 
   def teardown(cls):
     pass
@@ -100,8 +104,27 @@ class Constraints(Base):
     self.db.commit()
 
   def test_foreign_key(self):
+    self.create_test_table()
+    id_1 = self.insert_dummy_row()
+
     self.drop_table('test_child_table')
-    self.table_manager.create_table('test_child_table'
-      ('c1', 'integer' {'constraints': [('foreign_key', 'test_table', 'id')]}),
+    self.table_manager.create_table('test_child_table',
+      ('c1', 'integer', {'foreign_key': ('test_table', 'id')}),
       ('c2', 'string')
-    }
+    )
+
+    def dummy_row(id = 1235):
+      self.db.insert('test_child_table',
+        c1 = id,
+        c2 = 'test_string'
+      )
+    dummy_row(id_1)
+
+    with pytest.raises(Exception):
+      dummy_row()
+
+    self.table_manager.commit()
+    self.drop_table('test_child_table')
+    self.drop_table('test_table')
+    self.table_manager.commit()
+
