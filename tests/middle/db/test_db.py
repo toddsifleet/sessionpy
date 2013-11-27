@@ -25,10 +25,12 @@ class Base(object):
     vals.update(kwargs)
     return self.db.insert('test_table',  **vals)
 
+  def drop_table(self, table_name):
+    self.table_manager.drop_table(table_name)
 
 class Query(Base):
   def setup(self):
-    self.table_manager.drop_table('test_table')
+    self.drop_table('test_table')
     self.table_manager.create_table('test_table',
       ('c1', 'string'),
       ('c2', 'integer'),
@@ -74,7 +76,7 @@ class Query(Base):
 
 class Constraints(Base):
   def setup(self):
-    self.table_manager.drop_table('test_table')
+    self.drop_table('test_table')
 
   def test_length_of_string(self):
     self.table_manager.create_table('test_table',
@@ -97,3 +99,9 @@ class Constraints(Base):
       self.insert_dummy_row()
     self.db.commit()
 
+  def test_foreign_key(self):
+    self.drop_table('test_child_table')
+    self.table_manager.create_table('test_child_table'
+      ('c1', 'integer' {'constraints': [('foreign_key', 'test_table', 'id')]}),
+      ('c2', 'string')
+    }
