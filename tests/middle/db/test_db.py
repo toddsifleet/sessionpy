@@ -13,35 +13,30 @@ class Base(object):
 
   @classmethod
   def disconnect(cls):
-    pass
+    cls.db.commit()
 
+  def insert_dummy_row(self, n = 0, **kwargs):
+    vals = {
+      'c1': 'test_string',
+      'c2': 1234,
+      'c3': test_utils.now()
+    }
+
+    vals.update(kwargs)
+    return self.db.insert('test_table',  **vals)
+
+
+class Query(Base):
   def setup(self):
     self.table_manager.drop_table('test_table')
     self.table_manager.create_table('test_table',
-      ('c1', 'string', {'length': 15}),
+      ('c1', 'string'),
       ('c2', 'integer'),
       ('c3', 'datetime')
     )
 
   def teardown(cls):
     pass
-
-  def test_length_of_string(self):
-    with pytest.raises(Exception):
-      self.insert_dummy_row(c1 = 'A' * 16)
-    self.db.commit()
-
-  def test_unique(self):
-    self.table_manager.drop_table('test_table')
-    self.table_manager.create_table('test_table',
-      ('c1', 'string', {'constraints': ['unique']}),
-      ('c2', 'string'),
-      ('c3', 'string')
-    )
-    self.insert_dummy_row()
-    with pytest.raises(Exception):
-      self.insert_dummy_row()
-    self.db.commit()
 
   def test_select(self):
     time = test_utils.now()
@@ -76,12 +71,29 @@ class Base(object):
   def insert_dummy_rows(self, count = 10):
     return map(dummy_row, range(count))
 
-  def insert_dummy_row(self, n = 0, **kwargs):
-    vals = {
-      'c1': 'test_string',
-      'c2': 1234,
-      'c3': test_utils.now()
-    }
 
-    vals.update(kwargs)
-    return self.db.insert('test_table',  **vals)
+class Constraints(Base):
+  def setup(self):
+    self.table_manager.drop_table('test_table')
+
+  def test_length_of_string(self):
+    self.table_manager.create_table('test_table',
+      ('c1', 'string', {'length': 15}),
+      ('c2', 'string'),
+      ('c3', 'string')
+    )
+    with pytest.raises(Exception):
+      self.insert_dummy_row(c1 = 'A' * 16)
+    self.db.commit()
+
+  def test_unique(self):
+    self.table_manager.create_table('test_table',
+      ('c1', 'string', {'constraints': ['unique']}),
+      ('c2', 'string'),
+      ('c3', 'string')
+    )
+    self.insert_dummy_row()
+    with pytest.raises(Exception):
+      self.insert_dummy_row()
+    self.db.commit()
+
