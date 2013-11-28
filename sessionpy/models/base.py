@@ -87,8 +87,7 @@ class Model(object):
 
   @classmethod
   def _from_row(cls, row):
-    if row:
-      return cls(**row)
+    return cls(**row)
 
   @classmethod
   def sql(cls, input, binds = ()):
