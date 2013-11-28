@@ -30,9 +30,5 @@ class TableManager(base.TableManager):
   def primary_key_sql(self, *args, **kwargs):
     return 'MEDIUMINT'
 
-  def table_constraints_sql(self, *columns):
-    output = []
-    for c in columns:
-      if c[1] == 'primary_key':
-        output.append('PRIMARY KEY ({id})'.format(id = c[0]))
-    return output
+  def primary_key_table_sql(self, column_name):
+    return 'PRIMARY KEY ({column_name})'.format(column_name = column_name)

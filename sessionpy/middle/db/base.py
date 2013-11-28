@@ -107,21 +107,31 @@ class TableManager(Base):
 
     return ' '.join([x for x in sql if x])
 
-  def foreign_key_sql(self, column_name, table_name, foreign_name = 'id'):
-    return ' '.join((
-      'FOREIGN KEY',
-      '(' + column_name + ')',
-      'REFERENCES',
-      table_name + '(' + foreign_name + ')'
-    ))
+  def foreign_key_table_sql(self, column_name, colum_type, args) :
+    table_name, foreign_name = args['foreign_key']
+    return '''
+      FOREIGN KEY
+        ({column_name})
+      REFERENCES
+        {table_name}({foreign_name})
+      '''.format(
+      column_name = column_name,
+      table_name = table_name,
+      foreign_name = foreign_name
+    )
 
   def table_constraints_sql(self, *columns):
     output = []
-    columns = [x for x in columns if len(x) > 2]
-    for c in [c for c in columns]:
-      if 'foreign_key' in c[2]:
-        output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
+    for c in columns:
+      if len(c) > 2 and 'foreign_key' in c[2]:
+        sql = self.foreign_key_table_sql(*c)
+        output.append(sql)
+      if c[1] == 'primary_key':
+        output.append(self.primary_key_table_sql(c[0]))
     return output
+
+  def primary_key_table_sql(self, column_name):
+    return None
 
   def column_constraints_sql(self, **options):
       return [self.get_sql(k, **options) for k in options]

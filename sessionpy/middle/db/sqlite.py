@@ -27,14 +27,3 @@ class TableManager(base.TableManager):
   def primary_key_sql(self, *args, **kwargs):
     return 'integer primary key autoincrement'
 
-  def table_constraints_sql(self, *columns):
-    output = []
-    foreign_keys = [c for c in columns if len(c) > 2 and 'foreign_key' in c[2]]
-    for c in foreign_keys:
-      table_name, foreign_name = c[2]['foreign_key']
-      output.append('FOREIGN KEY({column}) REFERENCES {table_name}({foreign_name})'.format(
-      column = c[0],
-      table_name = table_name,
-      foreign_name = foreign_name
-    ))
-    return output
