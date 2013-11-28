@@ -16,4 +16,5 @@ class Connection(base.Connection):
 
 
 class TableManager(base.TableManager):
-  primary_key_sql = 'id serial primary key'
+  def primary_key_sql(self, *args, **kwargs):
+    return 'serial primary key'

@@ -77,7 +77,7 @@ class Connection(Base):
 
 
 class TableManager(Base):
-  create_sql = 'CREATE TABLE {table_name} ({columns} {after_sql})'
+  create_sql = 'CREATE TABLE {table_name} ({columns})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
 
   def __init__(self, connection, cursor):
@@ -86,14 +86,11 @@ class TableManager(Base):
 
   @transaction
   def create_table(self, table_name, *columns):
-    foreign_keys = self.foreign_keys_sql(*columns)
-    sql = (self.primary_key_sql,) +\
-      tuple([self.column_sql(*c) for c in columns])
-
+    sql = tuple([self.column_sql(*c) for c in columns])
+    sql += self.table_constraints_sql(*columns)
     self.sql(self.create_sql,
       table_name =  table_name,
-      columns = ", ".join(sql),
-      after_sql = self.after_create_sql(*columns),
+      columns = ", ".join(filter(bool, sql)),
     )
 
   @transaction
@@ -106,7 +103,7 @@ class TableManager(Base):
     sql = [
       name,
       self.get_sql(data_type, **args)
-    ] + self.constraints_sql(**args)
+    ] + self.column_constraints_sql(**args)
 
     return ' '.join([x for x in sql if x])
 
@@ -118,7 +115,7 @@ class TableManager(Base):
       table_name + '(' + foreign_name + ')'
     ))
 
-  def foreign_keys_sql(self, *columns):
+  def table_constraints_sql(self, *columns):
     output = []
     columns = [x for x in columns if len(x) > 2]
     for c in [c for c in columns]:
@@ -126,15 +123,7 @@ class TableManager(Base):
         output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
     return tuple(output)
 
-  def after_create_sql(self, *colums):
-    keys = self.foreign_keys_sql(*colums)
-
-    if keys:
-      return ', ' + ', '.join(keys)
-    else:
-      return ''
-
-  def constraints_sql(self, **options):
+  def column_constraints_sql(self, **options):
       return [self.get_sql(k, **options) for k in options]
 
   def get_sql(self, name, **args):

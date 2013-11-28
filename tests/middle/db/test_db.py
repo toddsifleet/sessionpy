@@ -32,6 +32,7 @@ class Base(object):
     self.drop_table('test_child_table')
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
+      ('id', 'primary_key'),
       ('c1', 'string'),
       ('c2', 'integer'),
       ('c3', 'datetime')
@@ -84,6 +85,7 @@ class Constraints(Base):
 
   def test_length_of_string(self):
     self.table_manager.create_table('test_table',
+      ('id', 'primary_key'),
       ('c1', 'string', {'length': 15}),
       ('c2', 'string'),
       ('c3', 'string')
@@ -94,6 +96,7 @@ class Constraints(Base):
 
   def test_unique(self):
     self.table_manager.create_table('test_table',
+      ('id', 'primary_key'),
       ('c1', 'string', {'unique': True}),
       ('c2', 'string'),
       ('c3', 'string')
@@ -109,19 +112,20 @@ class Constraints(Base):
 
     self.drop_table('test_child_table')
     self.table_manager.create_table('test_child_table',
+      ('id', 'primary_key'),
       ('c1', 'integer', {'foreign_key': ('test_table', 'id')}),
       ('c2', 'string')
     )
 
     def dummy_row(id = 1235):
-      self.db.insert('test_child_table',
+      return self.db.insert('test_child_table',
         c1 = id,
         c2 = 'test_string'
       )
     dummy_row(id_1)
 
     with pytest.raises(Exception):
-      dummy_row()
+      id_2 = dummy_row()
 
     self.table_manager.commit()
     self.drop_table('test_child_table')

@@ -22,8 +22,17 @@ class Connection(base.Connection):
 
 
 class TableManager(base.TableManager):
-  create_sql = 'CREATE TABLE {table_name} ({columns}, PRIMARY KEY (id) {after_sql})'
-  primary_key_sql = 'id MEDIUMINT NOT NULL AUTO_INCREMENT'
+  create_sql = 'CREATE TABLE {table_name} ({columns})'
 
   def integer_sql(self, *args, **kwargs):
     return 'MEDIUMINT'
+
+  def primary_key_sql(self, *args, **kwargs):
+    return 'MEDIUMINT'
+
+  def table_constraints_sql(self, *columns):
+    output = []
+    for c in columns:
+      if c[1] == 'primary_key':
+        output.append('PRIMARY KEY ({id})'.format(id = c[0]))
+    return tuple(output)
