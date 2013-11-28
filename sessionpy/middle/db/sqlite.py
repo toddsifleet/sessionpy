@@ -19,10 +19,9 @@ class Connection(base.Connection):
 
 class TableManager(base.TableManager):
   primary_key_sql = 'id integer primary key autoincrement'
-  drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
+
   def string_sql(self, *args, **kwargs):
     return ''
-
 
   def primary_key_sql(self, *args, **kwargs):
     return 'integer primary key autoincrement'
