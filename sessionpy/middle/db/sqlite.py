@@ -37,4 +37,4 @@ class TableManager(base.TableManager):
       table_name = table_name,
       foreign_name = foreign_name
     ))
-    return tuple(output)
+    return output

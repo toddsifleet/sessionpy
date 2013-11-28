@@ -86,7 +86,7 @@ class TableManager(Base):
 
   @transaction
   def create_table(self, table_name, *columns):
-    sql = tuple([self.column_sql(*c) for c in columns])
+    sql = [self.column_sql(*c) for c in columns]
     sql += self.table_constraints_sql(*columns)
     self.sql(self.create_sql,
       table_name =  table_name,
@@ -121,7 +121,7 @@ class TableManager(Base):
     for c in [c for c in columns]:
       if 'foreign_key' in c[2]:
         output.append(self.foreign_key_sql(c[0], *c[2]['foreign_key']))
-    return tuple(output)
+    return output
 
   def column_constraints_sql(self, **options):
       return [self.get_sql(k, **options) for k in options]

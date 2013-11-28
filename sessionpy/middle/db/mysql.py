@@ -35,4 +35,4 @@ class TableManager(base.TableManager):
     for c in columns:
       if c[1] == 'primary_key':
         output.append('PRIMARY KEY ({id})'.format(id = c[0]))
-    return tuple(output)
+    return output
