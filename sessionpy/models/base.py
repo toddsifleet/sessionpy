@@ -81,6 +81,15 @@ class Model(object):
       self.id
     )
 
+  def __eq__(self, other_model):
+    if not isinstance(other_model, type(self)):
+      return False
+
+    for x, y in zip (self.values(), other_model.values()):
+      if not x == y:
+        return False
+    return True
+
   @classmethod
   def create(cls, **kwargs):
     return cls(**kwargs).insert()
