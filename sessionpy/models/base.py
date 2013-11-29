@@ -1,6 +1,35 @@
 from functools import partial
 from datetime import datetime
 
+class Column(object):
+  def __init__(self, name, unique = False, **kwargs):
+    self.name = name
+    self.unique = unique
+
+  def is_unique(self):
+    return self.unique
+
+  def create_args(self):
+    return (self.name, self.column_type, {
+      'unique':  self.unique,
+    })
+
+class String(Column):
+  column_type = 'string'
+
+class DateTime(Column):
+  column_type = 'datetime'
+
+class Integer(Column):
+  column_type = 'integer'
+
+class PrimaryKey(Column):
+  column_type = 'primary_key'
+  unique = True
+
+  def is_unique(self):
+    return True
+
 class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
@@ -11,32 +40,32 @@ class ModelMeta(type):
     self.set_table_name(args[0])
 
   def update_columns(self):
-    self.columns = (('id', 'primary_key'), ) + self.columns + self.audit_columns
+    self.columns = (PrimaryKey('id', primary_key = True), ) + self.columns + self.audit_columns
 
   def add_filters(self):
     def find(unique, column, value):
       return self.select(column, value, unique)
 
     for c in self.columns:
-      name = 'find_by_' + c[0]
-      if c[1] == 'primary_key' or len(c) > 2 and 'unique' in c[2]:
-        setattr(self, name, partial(find, True, c[0]))
+      name = 'find_by_' + c.name
+      if c.is_unique():
+        setattr(self, name, partial(find, True, c.name))
       else:
-        setattr(self, name, partial(find, False, c[0]))
+        setattr(self, name, partial(find, False, c.name))
 
   def set_table_name(self, name):
     if not name == 'Model':
       self.table_name = name.lower() + 's'
 
   def set_column_names(self):
-    self.column_names = [c[0] for c in self.columns]
-    self.audit_names = [c[0] for c in self.audit_columns]
+    self.column_names = [c.name for c in self.columns]
+    self.audit_names = [c.name for c in self.audit_columns]
 
 class Model(object):
   __metaclass__ = ModelMeta
   audit_columns = (
-    ('created_at', 'datetime'),
-    ('updated_at', 'datetime')
+    DateTime('created_at'),
+    DateTime('updated_at'),
   )
 
   def __init__(self, **kwargs):
@@ -49,7 +78,7 @@ class Model(object):
       setattr(self, c, v)
 
   def insert(self):
-    names = [c[0] for c in self.columns]
+    names = [c.name for c in self.columns]
     values = dict(zip(names, self.values())[1::])
     self.id = self.db.insert(
       self.table_name,
@@ -59,7 +88,7 @@ class Model(object):
     return self
 
   def values(self):
-    return [getattr(self, k[0]) for k in self.columns]
+    return [getattr(self, k.name) for k in self.columns]
 
   def put(self):
     self.db.update(
@@ -127,8 +156,10 @@ class Model(object):
 
   @classmethod
   def init_table(cls):
-    cls.db.table_manager.create_table(cls.table_name, *cls.columns)
+    columns = [c.create_args() for c in cls.columns]
+    cls.db.table_manager.create_table(cls.table_name, *columns)
 
   @classmethod
   def drop_table(cls):
     cls.db.table_manager.drop_table(cls.table_name)
+

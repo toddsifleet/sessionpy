@@ -130,7 +130,9 @@ class TableManager(Base):
   def table_constraints_sql(self, *columns):
     output = []
     for c in columns:
-      if len(c) > 2 and 'foreign_key' in c[2]:
+      if len(c) > 2 and\
+          'foreign_key' in c[2] and\
+            c[2]['foreign_key']:
         sql = self.foreign_key_table_sql(*c)
         output.append(sql)
       if c[1] == 'primary_key':
@@ -141,7 +143,7 @@ class TableManager(Base):
     return None
 
   def column_constraints_sql(self, **options):
-      return [self.get_sql(k, **options) for k in options]
+      return [self.get_sql(k, **options) for k in options if options[k]]
 
   def get_sql(self, name, **args):
     try:

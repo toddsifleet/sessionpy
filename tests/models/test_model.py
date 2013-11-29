@@ -9,7 +9,7 @@ import pytest
 
 class DummyModel(Model):
   columns = (
-    String('unique_col', unique = True)
+    String('unique_col', unique = True),
     String('not_unique_col')
   )
 

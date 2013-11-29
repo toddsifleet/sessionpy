@@ -1,14 +1,14 @@
 import hashlib
 import os
 
-from models.base import Model
+from models.base import Model, String
 
 class User(Model):
   columns = (
-    ('username', 'string', {'unique': True}),
-    ('password', 'string'),
-    ('salt', 'string'),
-    ('email', 'string', {'unique': True})
+    String('username', unique = True),
+    String('email', unique = True),
+    String('password'),
+    String('salt'),
   )
 
   @classmethod
