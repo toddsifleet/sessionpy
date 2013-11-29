@@ -14,8 +14,15 @@ class ModelMeta(type):
     self.columns = (('id', 'primary_key'), ) + self.columns + self.audit_columns
 
   def add_filters(self):
-    for c in self.column_names:
-      setattr(self, 'find_by_' + c, partial(self.select, c))
+    def find(unique, column, value):
+      return self.select(column, value, unique)
+
+    for c in self.columns:
+      name = 'find_by_' + c[0]
+      if c[1] == 'primary_key' or len(c) > 2 and 'unique' in c[2]:
+        setattr(self, name, partial(find, True, c[0]))
+      else:
+        setattr(self, name, partial(find, False, c[0]))
 
   def set_table_name(self, name):
     if not name == 'Model':
@@ -37,7 +44,8 @@ class Model(object):
     for c in self.audit_names:
       if c not in kwargs:
         kwargs[c] = datetime.today().replace(microsecond=0)
-    for c, v in kwargs.items():
+    for c in self.column_names:
+      v = kwargs.get(c, None)
       setattr(self, c, v)
 
   def insert(self):
@@ -93,6 +101,12 @@ class Model(object):
 
   @classmethod
   def create(cls, **kwargs):
+    for c in kwargs:
+      if c not in cls.column_names:
+        raise Exception("{name} Model does not have the attribute `{c}`".format(
+          name = cls.table_name,
+          c = c
+        ))
     return cls(**kwargs).insert()
 
   @classmethod
@@ -104,9 +118,12 @@ class Model(object):
     return cls.db.sql(input, binds)
 
   @classmethod
-  def select(cls, column, value):
+  def select(cls, column, value, unique = True):
     result = cls.db.select(cls.table_name, column, value)
-    return cls._from_row(result)
+    if unique:
+      return cls._from_row(result.first)
+    else:
+      return (cls._from_row(x) for x in result)
 
   @classmethod
   def init_table(cls):
