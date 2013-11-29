@@ -53,15 +53,20 @@ class Connection(Base):
     self.sql(self.delete_sql, id, table_name = table_name)
 
   @transaction
-  def insert(self, table_name, **data):
+  def insert(self, table_name, return_id = False, **data):
     columns = data.keys()
     values = data.values()
-    self.sql(self.insert_sql, *values,
+    self.sql(self.get_insert_sql(return_id), *values,
       table_name = table_name,
       columns = ", ".join(columns),
       values = ", ".join([self.bind_char for x in columns])
     )
-    return self.last_row_id()
+
+    if return_id:
+      return self.last_row_id()
+
+  def get_insert_sql(self, return_id):
+    return self.insert_sql
 
   def last_row_id(self):
     return self.cursor.lastrowid

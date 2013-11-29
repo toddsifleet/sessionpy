@@ -45,6 +45,7 @@ class Model(object):
     values = dict(zip(names, self.values())[1::])
     self.id = self.db.insert(
       self.table_name,
+      True,
       **values
     )
     return self

@@ -9,7 +9,7 @@ class Base(test_db.Base):
     cls.file_handle = tempfile.NamedTemporaryFile(delete = False)
     return sqlite.Connection(cls.file_handle.name)
 
-class TestClass(test_db.Query, Base):
+class TestQuery(test_db.Query, Base):
   @classmethod
   def disconnect(cls):
     os.unlink(cls.file_handle.name)
@@ -19,3 +19,6 @@ class TestConstraints(test_db.Constraints, Base):
   def test_length_of_string(self):
     # sqlite cannot support this
     pass
+
+class TestQueryWithoutId(test_db.QueryWithoutId, Base):
+  pass

@@ -15,7 +15,7 @@ class Base(object):
   def disconnect(cls):
     cls.db.commit()
 
-  def insert_dummy_row(self, n = 0, **kwargs):
+  def insert_dummy_row(self, return_id = True, **kwargs):
     vals = {
       'c1': 'test_string',
       'c2': 1234,
@@ -23,7 +23,7 @@ class Base(object):
     }
 
     vals.update(kwargs)
-    return self.db.insert('test_table',  **vals)
+    return self.db.insert('test_table', return_id, **vals)
 
   def drop_table(self, table_name):
     self.table_manager.drop_table(table_name)
@@ -55,7 +55,7 @@ class Query(Base):
     assert result['c3'] == time
 
   def test_insert(self):
-    id = self.db.insert('test_table',
+    id = self.db.insert('test_table', True,
       c1 = 'v1',
       c2 = 2
     )
@@ -78,6 +78,17 @@ class Query(Base):
   def insert_dummy_rows(self, count = 10):
     return map(dummy_row, range(count))
 
+class QueryWithoutId(Base):
+  def setup(self):
+    self.drop_table('test_child_table')
+    self.drop_table('test_table')
+    self.table_manager.create_table('test_table',
+      ('c1', 'string'),
+      ('c2', 'integer'),
+      ('c3', 'datetime')
+    )
+  def test_insert(self):
+    self.insert_dummy_row(False)
 
 class Constraints(Base):
   def setup(self):
@@ -118,7 +129,7 @@ class Constraints(Base):
     )
 
     def dummy_row(id = 1235):
-      return self.db.insert('test_child_table',
+      return self.db.insert('test_child_table', True,
         c1 = id,
         c2 = 'test_string'
       )

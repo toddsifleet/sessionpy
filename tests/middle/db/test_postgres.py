@@ -11,3 +11,6 @@ class TestQuery(test_db.Query, Base):
 
 class TestConstraints(test_db.Constraints, Base):
   pass
+
+class TestQueryWithoutId(test_db.QueryWithoutId, Base):
+  pass

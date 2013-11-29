@@ -8,8 +8,11 @@ class Base(test_db.Base):
   def connect(cls):
     return mysql.Connection('test')
 
-class TestClass(test_db.Query, Base):
+class TestQuery(test_db.Query, Base):
   pass
 
 class TestConstraints(test_db.Constraints, Base):
+  pass
+
+class TestQueryWithoutId(test_db.QueryWithoutId, Base):
   pass
