@@ -54,6 +54,16 @@ class Query(Base):
     assert result['c2'] == 1234
     assert result['c3'] == time
 
+  def test_select_multiple_results(self):
+    ids = self.insert_dummy_rows(5)
+    results = self.db.select('test_table', 'c1', 'test_string')
+    for id, row in zip(ids, results):
+      assert row['id'] == id
+
+  def test_select_no_results(self):
+    result = self.db.select('test_table', 'c1', 'not in db')
+    assert result == None
+
   def test_insert(self):
     id = self.db.insert('test_table', True,
       c1 = 'v1',
@@ -81,7 +91,7 @@ class Query(Base):
     assert result is None
 
   def insert_dummy_rows(self, count = 10):
-    return map(dummy_row, range(count))
+    return [self.insert_dummy_row() for i in range(count)]
 
 class QueryWithoutId(Base):
   def setup(self):

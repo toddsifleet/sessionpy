@@ -42,7 +42,20 @@ class Connection(Base):
       table_name = table_name
     )
 
-    return self.get_row()
+
+    row_1 = self.get_row()
+    row_2 = self.get_row()
+    if row_1 and row_2:
+      return self.yield_results(row_1, row_2)
+    else:
+      return row_1
+
+  def yield_results(self, *rows):
+    for r in rows: yield r
+    row = self.get_row()
+    while row:
+      yield row
+      row = self.get_row()
 
   def get_row(self):
     return self.cursor.fetchone()

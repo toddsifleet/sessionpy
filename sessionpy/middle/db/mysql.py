@@ -28,7 +28,7 @@ class TableManager(base.TableManager):
     return 'MEDIUMINT'
 
   def primary_key_sql(self, *args, **kwargs):
-    return 'MEDIUMINT'
+    return 'MEDIUMINT NOT NULL AUTO_INCREMENT'
 
   def primary_key_table_sql(self, column_name):
     return 'PRIMARY KEY ({column_name})'.format(column_name = column_name)
