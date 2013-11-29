@@ -49,7 +49,7 @@ class Query(Base):
     time = test_utils.now()
     row = self.insert_dummy_row(c3 = time)
 
-    result = self.db.select('test_table', 'c1', 'test_string')
+    result = self.db.select('test_table', 'c1', 'test_string').first
     assert result['c1'] == 'test_string'
     assert result['c2'] == 1234
     assert result['c3'] == time
@@ -61,7 +61,7 @@ class Query(Base):
       assert row['id'] == id
 
   def test_select_no_results(self):
-    result = self.db.select('test_table', 'c1', 'not in db')
+    result = self.db.select('test_table', 'c1', 'not in db').first
     assert result == None
 
   def test_insert(self):
@@ -70,24 +70,24 @@ class Query(Base):
       c2 = 2
     )
 
-    result = self.db.select('test_table', 'id', id)
+    result = self.db.select('test_table', 'id', id).first
     assert result['c1'] == 'v1'
 
   def test_update(self):
     id = self.insert_dummy_row()
     self.db.update('test_table', id,  c1 = 'test_string_2')
-    result = self.db.select('test_table', 'id', id)
+    result = self.db.select('test_table', 'id', id).first
     assert result['c1'] == 'test_string_2'
 
   def test_delete(self):
     id = self.insert_dummy_row()
     self.db.delete('test_table', 'id', id)
-    result = self.db.select('test_table', 'id', id)
+    result = self.db.select('test_table', 'id', id).first
     assert result is None
 
     id = self.insert_dummy_row()
     self.db.delete('test_table', 'c1', 'test_string')
-    result = self.db.select('test_table', 'id', id)
+    result = self.db.select('test_table', 'id', id).first
     assert result is None
 
   def insert_dummy_rows(self, count = 10):

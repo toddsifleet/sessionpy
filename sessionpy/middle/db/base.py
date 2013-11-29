@@ -42,20 +42,7 @@ class Connection(Base):
       table_name = table_name
     )
 
-
-    row_1 = self.get_row()
-    row_2 = self.get_row()
-    if row_1 and row_2:
-      return self.yield_results(row_1, row_2)
-    else:
-      return row_1
-
-  def yield_results(self, *rows):
-    for r in rows: yield r
-    row = self.get_row()
-    while row:
-      yield row
-      row = self.get_row()
+    return Result(self.get_row)
 
   def get_row(self):
     return self.cursor.fetchone()
@@ -175,3 +162,18 @@ class TableManager(Base):
   def datetime_sql(self, *args, **kwargs):
     return 'TIMESTAMP'
 
+class Result(object):
+  def __init__(self, get_next):
+    self.first = get_next()
+    self.get_next = get_next
+
+  def __iter__(self):
+    self.first_item = True
+    return self
+
+  def next(self):
+    if self.first_item:
+      self.first_item = False
+      return self.first
+    else:
+      return self.get_next()
