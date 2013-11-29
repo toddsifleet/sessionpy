@@ -16,8 +16,7 @@ class Base(object):
     self.connection.commit()
 
   def start_transaction(self):
-    # self.cursor.execute('BEGIN')
-    pass
+    self.cursor.execute('BEGIN')
 
   def rollback(self):
     self.connection.rollback()
@@ -33,7 +32,7 @@ class Base(object):
 
 class Connection(Base):
   select_sql = 'SELECT * FROM {table_name} WHERE {column} = {bind_char}'
-  delete_sql = 'DELETE FROM {table_name} WHERE id = {bind_char}'
+  delete_sql = 'DELETE FROM {table_name} WHERE {column} = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
 
@@ -49,8 +48,11 @@ class Connection(Base):
     return self.cursor.fetchone()
 
   @transaction
-  def delete(self, table_name, id):
-    self.sql(self.delete_sql, id, table_name = table_name)
+  def delete(self, table_name, column, value):
+    self.sql(self.delete_sql, value,
+      column = column,
+      table_name = table_name
+    )
 
   @transaction
   def insert(self, table_name, return_id = False, **data):

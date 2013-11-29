@@ -71,7 +71,12 @@ class Query(Base):
 
   def test_delete(self):
     id = self.insert_dummy_row()
-    self.db.delete('test_table', id)
+    self.db.delete('test_table', 'id', id)
+    result = self.db.select('test_table', 'id', id)
+    assert result is None
+
+    id = self.insert_dummy_row()
+    self.db.delete('test_table', 'c1', 'test_string')
     result = self.db.select('test_table', 'id', id)
     assert result is None
 
