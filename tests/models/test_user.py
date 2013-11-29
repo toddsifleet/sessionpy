@@ -11,6 +11,11 @@ class TestUser(Base):
     result = User.find_by_username('bob.barker')
     assert user == result
 
+  def test_by_email(self):
+    user = self.dummy_user()
+    result = User.find_by_email('bob@barker.com')
+    assert user == result
+
   def test_by_id(self):
     user = self.dummy_user()
     result = User.find_by_id(user.id)
