@@ -60,6 +60,24 @@ class Query(Base):
     for id, row in zip(ids, results):
       assert row['id'] == id
 
+  def test_multiple_concurrent_selects(self):
+    ids_first = self.insert_dummy_rows(5, c1 = 'test_string_1')
+    ids_second = self.insert_dummy_rows(5, c1 = 'test_string_2')
+    results_first = self.db.select('test_table', 'c1', 'test_string_1')
+    results_second = self.db.select('test_table', 'c1', 'test_string_2')
+
+    results = zip(
+      ids_first,
+      ids_second,
+      results_first,
+      results_second
+    )
+
+    for id_1, id_2, r_1, r_2 in results:
+      print id_1, id_2, r_1, r_2
+      assert id_1 == r_1['id']
+      assert id_2 == r_2['id']
+
   def test_select_no_results(self):
     result = self.db.select('test_table', 'c1', 'not in db').first
     assert result == None
@@ -90,8 +108,8 @@ class Query(Base):
     result = self.db.select('test_table', 'id', id).first
     assert result is None
 
-  def insert_dummy_rows(self, count = 10):
-    return [self.insert_dummy_row() for i in range(count)]
+  def insert_dummy_rows(self, count = 10, **kwargs):
+    return [self.insert_dummy_row(**kwargs) for i in range(count)]
 
 class QueryWithoutId(Base):
   def setup(self):

@@ -13,7 +13,7 @@ class Connection(base.Connection):
     self.connection = sqlite3.connect(db_name, detect_types=sqlite3.PARSE_DECLTYPES)
     self.connection.execute('PRAGMA foreign_keys = ON;')
     self.connection.row_factory = dict_factory
-    self.cursor = self.connection.cursor()
+    self.cursor = self.get_cursor()
     self.table_manager = TableManager(self.connection, self.cursor)
 
 

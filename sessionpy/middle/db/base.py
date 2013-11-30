@@ -1,3 +1,4 @@
+from functools import partial
 
 def transaction(func):
   def wrapper(self, *args, **kwargs):
@@ -21,13 +22,23 @@ class Base(object):
   def rollback(self):
     self.connection.rollback()
 
+  def get_cursor(self):
+    return self.connection.cursor()
+
   def sql(self, sql, *binds, **kwargs):
+    if 'cursor' in kwargs:
+      cursor = kwargs['cursor']
+      del kwargs['cursor']
+    else:
+      cursor = self.cursor
+
     sql = sql.format(
       bind_char = self.bind_char,
       **kwargs
     )
     print sql, binds
-    return self.cursor.execute(sql, binds)
+    cursor.execute(sql, binds)
+    return cursor
 
 
 class Connection(Base):
@@ -37,15 +48,16 @@ class Connection(Base):
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
 
   def select(self, table_name, column, value):
-    self.sql(self.select_sql, value,
+    cursor = self.sql(self.select_sql, value,
+      cursor = self.get_cursor(),
       column = column,
       table_name = table_name
     )
 
-    return Result(self.get_row)
+    return Result(cursor, self.get_row)
 
-  def get_row(self):
-    return self.cursor.fetchone()
+  def get_row(self, cursor):
+    return cursor.fetchone()
 
   @transaction
   def delete(self, table_name, column, value):
@@ -165,9 +177,9 @@ class TableManager(Base):
     return 'TIMESTAMP'
 
 class Result(object):
-  def __init__(self, get_next):
-    self.first = get_next()
-    self.get_next = get_next
+  def __init__(self, cursor, get_row):
+    self.get_row = partial(get_row, cursor)
+    self.first = self.get_row()
 
   def __iter__(self):
     self.first_item = True
@@ -178,4 +190,4 @@ class Result(object):
       self.first_item = False
       return self.first
     else:
-      return self.get_next()
+      return self.get_row()

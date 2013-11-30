@@ -14,7 +14,7 @@ class Connection(base.Connection):
       cursorclass = MySQLdb.cursors.DictCursor
     )
 
-    self.cursor = self.connection.cursor()
+    self.cursor = self.get_cursor()
     self.table_manager = TableManager(self.connection, self.cursor)
 
   def datetime_sql(self, *args, **kwargs):
