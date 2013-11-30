@@ -15,10 +15,11 @@ class User(Model):
   @classmethod
   def create(cls, **kwargs):
     kwargs['salt'] = cls.generate_salt()
-    kwargs['password'] = cls.hash_password(
-      kwargs['password'],
-      kwargs['salt']
-    )
+    if 'password' in kwargs:
+      kwargs['password'] = cls.hash_password(
+        kwargs['password'],
+        kwargs['salt']
+      )
     user = super(User, cls).create(**kwargs)
     return user
 
