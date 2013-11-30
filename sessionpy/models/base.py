@@ -129,8 +129,9 @@ class Model(object):
 
   @classmethod
   def init_table(cls):
-    columns = [c.create_args() for c in cls.columns]
-    cls.db.table_manager.create_table(cls.table_name, *columns)
+    cls.db.table_manager.create_table(cls.table_name, *[
+      c.create_args() for c in cls.columns
+    ])
 
   @classmethod
   def drop_table(cls):
