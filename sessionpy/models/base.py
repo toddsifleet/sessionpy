@@ -3,7 +3,6 @@ from datetime import datetime
 
 from middle.db.types import DateTime, PrimaryKey
 
-
 class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
@@ -14,7 +13,7 @@ class ModelMeta(type):
     self.set_table_name(args[0])
 
   def update_columns(self):
-    self.columns = (PrimaryKey('id', primary_key = True), ) + self.columns + self.audit_columns
+    self.columns = (PrimaryKey('id'), ) + self.columns + self.audit_columns
 
   def add_filters(self):
     def find(unique, column, value):

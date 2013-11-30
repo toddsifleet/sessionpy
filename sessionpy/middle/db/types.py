@@ -3,14 +3,17 @@ class Column(object):
   def __init__(self, name, unique = False, **kwargs):
     self.name = name
     self.unique = unique
+    self.args = kwargs
 
   def is_unique(self):
     return self.unique
 
   def create_args(self):
-    return (self.name, self.column_type, {
-      'unique':  self.unique,
-    })
+    args = {
+      'unique': self.unique
+    }
+    args.update(self.args)
+    return (self.name, self.column_type, self.args)
 
 class String(Column):
   column_type = 'string'
@@ -23,7 +26,6 @@ class Integer(Column):
 
 class PrimaryKey(Column):
   column_type = 'primary_key'
-  unique = True
 
   def is_unique(self):
     return True
