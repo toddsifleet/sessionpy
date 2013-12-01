@@ -2,7 +2,7 @@ import hashlib
 import os
 
 from models.base import Model
-from middle.db.types import String
+from models.types import String
 
 class User(Model):
   columns = (

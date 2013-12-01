@@ -2,7 +2,7 @@ from tests import test_utils
 from authenticator import Authenticator
 from middle.db import sqlite, mysql, postgres
 from models.base import Model
-from middle.db.types import String
+from models.types import String
 from models.user import User
 from models.session import Session
 

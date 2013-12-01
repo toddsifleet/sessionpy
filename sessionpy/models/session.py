@@ -1,5 +1,5 @@
 from models.base import Model
-from middle.db.types import String, Integer, DateTime
+from models.types import String, Integer, DateTime
 
 class Session(Model):
   columns = (

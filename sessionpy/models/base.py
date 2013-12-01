@@ -1,7 +1,7 @@
 from functools import partial
 from datetime import datetime
 
-from middle.db.types import DateTime, PrimaryKey
+from types import DateTime, PrimaryKey
 
 class ModelMeta(type):
   def __init__(self, *args):
