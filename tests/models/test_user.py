@@ -1,10 +1,7 @@
 from test_model import Base
 from models.user import User
 
-class TestUser(Base):
-  def setup(self):
-    User.drop_table()
-    User.init_table()
+class UserModel(Base):
 
   def test_by_username(self):
     user = self.dummy_user()

@@ -8,8 +8,8 @@ class User(Model):
   columns = (
     String('username', unique = True),
     String('email', unique = True),
-    String('password'),
-    String('salt'),
+    String('password', length = 512),
+    String('salt', length = 512),
   )
 
   @classmethod

@@ -4,12 +4,6 @@ from models.session import Session
 from models.user import User
 
 class TestSession(Base):
-  def setup(self):
-    Session.drop_table()
-    Session.init_table()
-    User.drop_table()
-    User.init_table()
-
   def test_without_user(self):
     with pytest.raises(Exception):
       Session.create(user_id = 123421231)
@@ -19,3 +13,8 @@ class TestSession(Base):
     result = Session.create(user_id = user.id)
     assert result.user_id == user.id
 
+  def test_duplicate_tokens(self):
+    user = User.create()
+    Session.create(user_id = user.id, token = 'test_token')
+    with pytest.raises(Exception):
+      Session.create(user_id = user.id, token = 'test_token')

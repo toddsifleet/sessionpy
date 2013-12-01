@@ -13,7 +13,7 @@ class Column(object):
       'unique': self.unique
     }
     args.update(self.args)
-    return (self.name, self.column_type, self.args)
+    return (self.name, self.column_type, args)
 
 class String(Column):
   column_type = 'string'

@@ -1,12 +1,15 @@
 from tests import test_utils
 from authenticator import Authenticator
-from middle.db import sqlite
+from middle.db import sqlite, mysql, postgres
 from models.base import Model
 from middle.db.types import String
+from models.user import User
+from models.session import Session
 
 import tempfile
 import os
 import pytest
+
 
 class DummyModel(Model):
   columns = (
@@ -18,15 +21,28 @@ class Base(object):
   @classmethod
   def setup_class(cls):
     cls.file_handle = tempfile.NamedTemporaryFile(delete = False)
-    conn = sqlite.Connection(cls.file_handle.name)
+    conn = cls.connect()
     Authenticator(conn)
+
+  @classmethod
+  def connect(cls):
+    db = pytest.config.getoption('--db')
+    if db == 'sqlite':
+      return sqlite.Connection(cls.file_handle.name)
+    elif db == 'mysql':
+      return mysql.Connection('test')
+    elif db == 'postgres':
+      return postgres.Connection('test')
 
   @classmethod
   def teardown_class(cls):
     os.unlink(cls.file_handle.name)
 
   def setup(self):
-    pass
+    Session.drop_table()
+    User.drop_table()
+    User.init_table()
+    Session.init_table()
 
   def teardown(self):
     pass

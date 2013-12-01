@@ -3,9 +3,12 @@ from functools import partial
 def transaction(func):
   def wrapper(self, *args, **kwargs):
     self.start_transaction()
-    result = func(self, *args, **kwargs)
-    self.commit()
-    return result
+    try:
+      return func(self, *args, **kwargs)
+    except Exception as e:
+      raise e
+    finally:
+      self.commit()
   return wrapper
 
 class Base(object):
