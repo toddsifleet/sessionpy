@@ -1,5 +1,6 @@
 from functools import partial
 
+
 def commit_after(func):
   def wrapper(self, *args, **kwargs):
     try:
@@ -14,6 +15,9 @@ class Base(object):
   bind_char = '%s'
   def __init__(self, *args, **kwargs):
     self.connect(*args, **kwargs)
+
+  def quote_if_needed(self, v):
+    return v
 
   def commit(self):
     self.connection.commit()
@@ -63,13 +67,13 @@ class Connection(Base):
   @commit_after
   def delete(self, table_name, column, value):
     self.sql(self.delete_sql, value,
-      column = column,
+      column = self.quote_if_needed(column),
       table_name = table_name
     )
 
   @commit_after
   def insert(self, table_name, return_id = False, **data):
-    columns = data.keys()
+    columns = map(self.quote_if_needed, data.keys())
     values = data.values()
     self.sql(self.get_insert_sql(return_id), *values,
       table_name = table_name,
@@ -121,24 +125,12 @@ class TableManager(Base):
     if args is None: args = {}
 
     sql = [
-      name,
+      self.quote_if_needed(name),
       self.get_sql(data_type, **args)
     ] + self.column_constraints_sql(**args)
 
     return ' '.join([x for x in sql if x])
 
-  def foreign_key_table_sql(self, column_name, colum_type, args) :
-    table_name, foreign_name = args['foreign_key']
-    return '''
-      FOREIGN KEY
-        ({column_name})
-      REFERENCES
-        {table_name}({foreign_name})
-      '''.format(
-      column_name = column_name,
-      table_name = table_name,
-      foreign_name = foreign_name
-    )
 
   def table_constraints_sql(self, *columns):
     output = []
@@ -159,9 +151,10 @@ class TableManager(Base):
       return [self.get_sql(k, **options) for k in options if options[k]]
 
   def get_sql(self, name, **args):
-    try:
-      return getattr(self, name + '_sql')(**args)
-    except:
+    f = getattr(self, name + '_sql', None)
+    if f:
+      return f(**args)
+    else:
       return ''
 
   def string_sql(self, *args, **kwargs):
@@ -171,11 +164,28 @@ class TableManager(Base):
   def integer_sql(self, *args, **kwargs):
     return 'INTEGER'
 
+  def not_null_sql(self, *args, **kwargs):
+    return 'NOT NULL'
+
   def unique_sql(self, *args, **kwargs):
     return 'UNIQUE'
 
   def datetime_sql(self, *args, **kwargs):
     return 'TIMESTAMP'
+
+  def foreign_key_table_sql(self, column_name, colum_type, args) :
+    table_name, foreign_name = args['foreign_key']
+    column_name = self.quote_if_needed(column_name)
+    return '''
+      FOREIGN KEY
+        ({column_name})
+      REFERENCES
+        {table_name}({foreign_name})
+      '''.format(
+      column_name = column_name,
+      table_name = table_name,
+      foreign_name = foreign_name
+    )
 
 class Result(object):
   def __init__(self, cursor, get_row):
@@ -192,3 +202,4 @@ class Result(object):
       return self.first
     else:
       return self.get_row()
+

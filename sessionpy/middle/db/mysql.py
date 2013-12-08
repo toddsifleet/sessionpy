@@ -32,3 +32,4 @@ class TableManager(base.TableManager):
 
   def primary_key_table_sql(self, column_name):
     return 'PRIMARY KEY ({column_name})'.format(column_name = column_name)
+

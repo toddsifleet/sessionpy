@@ -2,9 +2,11 @@ from functools import partial
 
 class Column(object):
   unique = False
-  def __init__(self, name, unique = False, **kwargs):
+  null = True
+  def __init__(self, name, **kwargs):
     self.name = name
-    self.unique = unique or self.unique
+    self.unique = kwargs.pop('unique', self.unique)
+    self.null = kwargs.pop('null', self.null)
     self.args = kwargs
 
   def is_unique(self):
@@ -12,7 +14,8 @@ class Column(object):
 
   def create_args(self):
     args = {
-      'unique': self.unique
+      'unique': self.unique,
+      'not_null': not self.null
     }
     args.update(self.args)
     return (self.name, self.column_type, args)
@@ -51,7 +54,8 @@ class PrimaryKey(Column):
 
 class Relationship(Column):
   column_type = 'integer'
-  def __init__(self, model):
+  def __init__(self, model, null = True):
+    self.null = null
     self.related_type = model
     self.name = model.name
     self.args = {
