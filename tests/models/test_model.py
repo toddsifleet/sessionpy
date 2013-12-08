@@ -2,7 +2,7 @@ from tests import test_utils
 from authenticator import Authenticator
 from middle.db import sqlite, mysql, postgres
 from models.base import Model
-from models.types import String
+from models.types import String, Owner
 from models.user import User
 from models.session import Session
 
@@ -10,11 +10,14 @@ import tempfile
 import os
 import pytest
 
+class DummyOwner(Model):
+  columns = tuple()
 
 class DummyModel(Model):
   columns = (
     String('unique_col', unique = True),
-    String('not_unique_col')
+    String('not_unique_col'),
+    Owner(DummyOwner)
   )
 
 class Base(object):
@@ -50,7 +53,9 @@ class Base(object):
 
 class TestDummyModel(Base):
   def setup(self):
-    DummyModel.init_table()
+    model_types = [DummyModel, DummyOwner]
+    map(lambda x: x.drop_table(), model_types)
+    map(lambda x: x.init_table(), model_types[::-1])
 
   def teardown(self):
     DummyModel.drop_table()
@@ -78,3 +83,13 @@ class TestDummyModel(Base):
   def test_invalid_create_param(self):
     with pytest.raises(Exception):
       DummyModel.create(fake_name = 'test')
+
+  def test_owner(self):
+    owner = DummyOwner.create()
+    parent = DummyModel.create(**{
+      DummyOwner.name: owner
+    })
+
+    parent = DummyModel.find_by_id(parent.id)
+    assert parent.fetch_dummy_owner() == owner
+

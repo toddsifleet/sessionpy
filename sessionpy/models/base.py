@@ -1,34 +1,50 @@
 from functools import partial
+import re
 from datetime import datetime
 
-from types import DateTime, PrimaryKey
+from types import DateTime, PrimaryKey, Dependent
+
+def propogate(func):
+  def wrapper(self, *args, **kwargs):
+    def call(m):
+      getattr(m, func.func_name)(*args, **kwargs)
+
+    map(call, self.dependent_models)
+    r = func(self, *args, **kwargs)
+    map(call, self.dependents)
+    return r
+  return wrapper
 
 class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
+    self.foreign_keys = {}
+    self.dependent_models = []
+    self.dependents = []
     if hasattr(self, 'columns'):
+      self.set_table_name(args[0])
       self.update_columns()
       self.set_column_names()
       self.add_filters()
-    self.set_table_name(args[0])
 
   def update_columns(self):
     self.columns = (PrimaryKey('id'), ) + self.columns + self.audit_columns
 
   def add_filters(self):
-    def find(unique, column, value):
-      return self.select(column, value, unique)
-
     for c in self.columns:
-      name = 'find_by_' + c.name
-      if c.is_unique():
-        setattr(self, name, partial(find, True, c.name))
-      else:
-        setattr(self, name, partial(find, False, c.name))
+      c.update_model(self)
+
+  def setup_dependent(self, child_type):
+    self.add_dependent(child_type)
+    name = child_type.name
+    setattr(self, name, partial(self.fetch_dependent, child_type))
+    pass
+
 
   def set_table_name(self, name):
     if not name == 'Model':
-      self.table_name = name.lower() + 's'
+      self.name = camel_to_snake(name)
+      self.table_name = self.name + 's'
 
   def set_column_names(self):
     self.column_names = [c.name for c in self.columns]
@@ -40,12 +56,14 @@ class Model(object):
     DateTime('created_at'),
     DateTime('updated_at'),
   )
+  table_name = None
 
   def __init__(self, **kwargs):
     self.id = None
     for c in self.audit_names:
       if c not in kwargs:
         kwargs[c] = datetime.today().replace(microsecond=0)
+
     for c in self.column_names:
       v = kwargs.get(c, None)
       setattr(self, c, v)
@@ -61,7 +79,7 @@ class Model(object):
     return self
 
   def values(self):
-    return [getattr(self, k.name) for k in self.columns]
+    return [k.to_db(getattr(self, k.name)) for k in self.columns]
 
   def put(self):
     self.db.update(
@@ -105,6 +123,7 @@ class Model(object):
   def create(cls, **kwargs):
     for c in kwargs:
       if c not in cls.column_names:
+        raise Exception(cls.column_names)
         raise Exception("{name} Model does not have the attribute `{c}`".format(
           name = cls.table_name,
           c = c
@@ -113,6 +132,7 @@ class Model(object):
 
   @classmethod
   def _from_row(cls, row):
+    vals = [f.from_db(x) for f, x in zip(cls.columns, row)]
     return cls(**row)
 
   @classmethod
@@ -134,6 +154,21 @@ class Model(object):
     ])
 
   @classmethod
+  @propogate
   def drop_table(cls):
     cls.db.table_manager.drop_table(cls.table_name)
 
+  @classmethod
+  def add_dependent_model(self, model):
+    self.dependent_models.append(model)
+
+  @classmethod
+  def add_dependent(self, model):
+    self.dependents.append(model)
+
+_underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
+_underscorer2 = re.compile('([a-z0-9])([A-Z])')
+
+def camel_to_snake(s):
+    subbed = _underscorer1.sub(r'\1_\2', s)
+    return _underscorer2.sub(r'\1_\2', subbed).lower()
