@@ -40,10 +40,11 @@ class Base(object):
 
 class Query(Base):
   def setup(self):
+    self.db.start_transaction()
     self.create_test_table()
 
   def teardown(cls):
-    pass
+    sefl.db.rollback()
 
   def test_select(self):
     time = test_utils.now()
