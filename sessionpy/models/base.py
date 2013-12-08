@@ -7,19 +7,18 @@ from types import DateTime, PrimaryKey, Dependent
 def propogate(func):
   def wrapper(self, *args, **kwargs):
     def call(m):
-      getattr(m, func.func_name)(*args, **kwargs)
+      f = getattr(m, func.func_name, None)
+      if f:
+        f(*args, **kwargs)
 
-    map(call, self.dependent_models)
-    r = func(self, *args, **kwargs)
     map(call, self.dependents)
-    return r
+    return func(self, *args, **kwargs)
   return wrapper
 
 class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
     self.foreign_keys = {}
-    self.dependent_models = []
     self.dependents = []
     if hasattr(self, 'columns'):
       self.set_table_name(args[0])
@@ -33,13 +32,6 @@ class ModelMeta(type):
   def add_filters(self):
     for c in self.columns:
       c.update_model(self)
-
-  def setup_dependent(self, child_type):
-    self.add_dependent(child_type)
-    name = child_type.name
-    setattr(self, name, partial(self.fetch_dependent, child_type))
-    pass
-
 
   def set_table_name(self, name):
     if not name == 'Model':
@@ -157,10 +149,6 @@ class Model(object):
   @propogate
   def drop_table(cls):
     cls.db.table_manager.drop_table(cls.table_name)
-
-  @classmethod
-  def add_dependent_model(self, model):
-    self.dependent_models.append(model)
 
   @classmethod
   def add_dependent(self, model):

@@ -29,7 +29,6 @@ class Base(object):
     self.table_manager.drop_table(table_name)
 
   def create_test_table(self):
-    self.drop_table('test_child_table')
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
       ('id', 'primary_key'),
@@ -38,13 +37,16 @@ class Base(object):
       ('c3', 'datetime')
     )
 
-class Query(Base):
   def setup(self):
     self.db.start_transaction()
-    self.create_test_table()
 
-  def teardown(cls):
-    sefl.db.rollback()
+  def teardown(self):
+    self.db.rollback()
+
+class Query(Base):
+  def setup(self):
+    super(Query, self).setup()
+    self.create_test_table()
 
   def test_select(self):
     time = test_utils.now()
@@ -114,6 +116,7 @@ class Query(Base):
 
 class QueryWithoutId(Base):
   def setup(self):
+    super(QueryWithoutId, self).setup()
     self.drop_table('test_child_table')
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
@@ -126,6 +129,7 @@ class QueryWithoutId(Base):
 
 class Constraints(Base):
   def setup(self):
+    super(Constraints, self).setup()
     self.drop_table('test_table')
 
   def test_length_of_string(self):

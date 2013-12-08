@@ -1,15 +1,19 @@
 import pytest
 import sys
 
-def run_test(db):
+def run_test(db, *args):
   print '***Running all Models tests with ' + db + '***'
-  pytest.main(['--db', db, 'models'])
+  pytest.main(list(args) + ['--db', db, 'models'])
 
 if __name__ == '__main__':
-  db = sys.argv[1]
+  args = []
+  dbs = ['mysql', 'sqlite', 'postgres']
+  if len(sys.argv) > 1:
+    for v in sys.argv[1:]:
+      if v == 'verbose':
+        args = ['-s'] + args
+      elif not v == 'all':
+        dbs = [v]
 
-  if db  == 'all':
-    for db in ['mysql', 'sqlite', 'postgres']:
-      run_test(db)
-  else:
-    run_test(db)
+  for db in dbs:
+    run_test(db, *args)

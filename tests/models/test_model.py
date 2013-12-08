@@ -58,7 +58,7 @@ class TestDummyModel(Base):
     map(lambda x: x.init_table(), model_types[::-1])
 
   def teardown(self):
-    DummyModel.drop_table()
+    DummyOwner.drop_table()
 
   def test_audit(self):
     created_at = test_utils.days_ago(30)
@@ -86,10 +86,13 @@ class TestDummyModel(Base):
 
   def test_owner(self):
     owner = DummyOwner.create()
-    parent = DummyModel.create(**{
+    owned = DummyModel.create(**{
       DummyOwner.name: owner
     })
 
-    parent = DummyModel.find_by_id(parent.id)
-    assert parent.fetch_dummy_owner() == owner
+    owned = DummyModel.find_by_id(owned.id)
+    assert owned.fetch_dummy_owner() == owner
+
+    owner = DummyOwner.find_by_id(owner.id)
+    assert owned in owner.dummy_models()
 

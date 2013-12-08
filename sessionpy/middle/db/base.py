@@ -1,8 +1,7 @@
 from functools import partial
 
-def transaction(func):
+def commit_after(func):
   def wrapper(self, *args, **kwargs):
-    self.start_transaction()
     try:
       return func(self, *args, **kwargs)
     except Exception as e:
@@ -20,25 +19,24 @@ class Base(object):
     self.connection.commit()
 
   def start_transaction(self):
+    print 'Transaction Starrted'
     self.cursor.execute('BEGIN')
 
   def rollback(self):
+    print 'Rolling Back'
     self.connection.rollback()
 
   def get_cursor(self):
     return self.connection.cursor()
 
   def sql(self, sql, *binds, **kwargs):
-    if 'cursor' in kwargs:
-      cursor = kwargs['cursor']
-      del kwargs['cursor']
-    else:
-      cursor = self.cursor
+    cursor = kwargs.pop('cursor', self.cursor)
 
     sql = sql.format(
       bind_char = self.bind_char,
       **kwargs
     )
+
     print sql, binds
     cursor.execute(sql, binds)
     return cursor
@@ -62,14 +60,14 @@ class Connection(Base):
   def get_row(self, cursor):
     return cursor.fetchone()
 
-  @transaction
+  @commit_after
   def delete(self, table_name, column, value):
     self.sql(self.delete_sql, value,
       column = column,
       table_name = table_name
     )
 
-  @transaction
+  @commit_after
   def insert(self, table_name, return_id = False, **data):
     columns = data.keys()
     values = data.values()
@@ -88,7 +86,7 @@ class Connection(Base):
   def last_row_id(self):
     return self.cursor.lastrowid
 
-  @transaction
+  @commit_after
   def update(self, table_name, id, **data):
     columns = ", ".join([ c + ' = {bind_char}' for c in data])
     binds = data.values() + [id]
@@ -106,7 +104,7 @@ class TableManager(Base):
     self.connection = connection
     self.cursor = cursor
 
-  @transaction
+  @commit_after
   def create_table(self, table_name, *columns):
     sql = [self.column_sql(*c) for c in columns]
     sql += self.table_constraints_sql(*columns)
@@ -115,7 +113,7 @@ class TableManager(Base):
       columns = ", ".join(filter(bool, sql)),
     )
 
-  @transaction
+  @commit_after
   def drop_table(self, table_name):
     self.sql(self.drop_table_sql, table_name = table_name)
 

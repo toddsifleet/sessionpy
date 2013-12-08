@@ -59,15 +59,22 @@ class Relationship(Column):
     }
 
   def to_db(self, model):
-    if model:
+    if hasattr(model, 'id'):
       return model.id
+    return model
 
   def update_model(self, model):
     def find(p):
       return self.related_type.find_by_id(p.id)
 
     setattr(model, 'fetch_' + self.name, find)
-    model.add_dependent(self.related_type)
+
+    def find(p):
+      return model.select(self.name, p.id, False)
+
+    setattr(self.related_type, model.name + 's', find)
+
+    self.related_type.add_dependent(model)
 
 class Dependent(Relationship):
   unique = True
