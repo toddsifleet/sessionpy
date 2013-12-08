@@ -1,6 +1,5 @@
 from functools import partial
 
-
 def commit_after(func):
   def wrapper(self, *args, **kwargs):
     try:

@@ -18,3 +18,10 @@ class TestSession(Base):
     Session.create(user = user, token = 'test_token')
     with pytest.raises(Exception):
       Session.create(user = user, token = 'test_token')
+
+  def test_get_owner(self):
+    user = User.create()
+    session = Session.create(user = user)
+    session = Session.find_by_id(session.id)
+    assert user = session.fetch_user()
+
