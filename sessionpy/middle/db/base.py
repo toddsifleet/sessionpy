@@ -54,7 +54,7 @@ class Connection(Base):
   def select(self, table_name, column, value):
     cursor = self.sql(self.select_sql, value,
       cursor = self.get_cursor(),
-      column = column,
+      column = self.quote_if_needed(column),
       table_name = table_name
     )
 

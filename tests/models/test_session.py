@@ -23,5 +23,14 @@ class TestSession(Base):
     user = User.create()
     session = Session.create(user = user)
     session = Session.find_by_id(session.id)
-    assert user = session.fetch_user()
+    assert user == session.fetch_user()
+
+  def test_multiple_session(self):
+    user = User.create()
+    sessions = [
+      Session.create(user = user),
+      Session.create(user = user)
+    ]
+
+    # assert list(Session.find_by_user(user)) == sessions
 

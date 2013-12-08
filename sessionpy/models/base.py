@@ -60,18 +60,29 @@ class Model(object):
       v = kwargs.get(c, None)
       setattr(self, c, v)
 
+  @classmethod
+  def to_db(self, v):
+    if hasattr(v, 'id'):
+      return v.id
+    return v
+
+  @classmethod
+  def from_db(self, v):
+    return v
+
   def insert(self):
-    names = [c.name for c in self.columns]
-    values = dict(zip(names, self.values())[1::])
+    keys = [c.name for c in self.columns]
+    values = map(self.to_db, self.values())
+    kwargs = dict(zip(keys,values))
     self.id = self.db.insert(
       self.table_name,
       True,
-      **values
+      **kwargs
     )
     return self
 
   def values(self):
-    return [k.to_db(getattr(self, k.name)) for k in self.columns]
+    return [getattr(self, k.name) for k in self.columns]
 
   def put(self):
     self.db.update(
@@ -124,8 +135,10 @@ class Model(object):
 
   @classmethod
   def _from_row(cls, row):
-    vals = [f.from_db(x) for f, x in zip(cls.columns, row)]
-    return cls(**row)
+    args = {}
+    for x in row:
+      args[x] = cls.from_db(row[x])
+    return cls(**args)
 
   @classmethod
   def sql(cls, input, binds = ()):
@@ -133,7 +146,8 @@ class Model(object):
 
   @classmethod
   def select(cls, column, value, unique = True):
-    result = cls.db.select(cls.table_name, column, value)
+    v = value.id if hasattr(value, 'id') else value
+    result = cls.db.select(cls.table_name, column, v)
     if unique:
       return cls._from_row(result.first)
     else:

@@ -20,13 +20,10 @@ class Column(object):
     args.update(self.args)
     return (self.name, self.column_type, args)
 
-  def to_db(self, value):
-    return value
-
-  def from_db(self, value):
-    return value
-
   def update_model(self, model):
+    return self.add_find_by(model)
+
+  def add_find_by(self, model):
     name = 'find_by_' + self.name
     def find(unique, column, value):
       return model.select(column, value, unique)
@@ -34,9 +31,6 @@ class Column(object):
       setattr(model, name, partial(find, True, self.name))
     else:
       setattr(model, name, partial(find, False, self.name))
-
-  def to_db(self, value):
-    return value
 
 class String(Column):
   column_type = 'string'
@@ -62,11 +56,6 @@ class Relationship(Column):
       'foreign_key': (model.table_name, 'id')
     }
 
-  def to_db(self, model):
-    if hasattr(model, 'id'):
-      return model.id
-    return model
-
   def update_model(self, model):
     def find(p):
       return self.related_type.find_by_id(p.id)
@@ -78,6 +67,7 @@ class Relationship(Column):
 
     setattr(self.related_type, model.name + 's', find)
 
+    self.add_find_by(model)
     self.related_type.add_dependent(model)
 
 class Dependent(Relationship):
