@@ -32,7 +32,7 @@ class Base(object):
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
       ('id', 'primary_key'),
-      ('c1', 'string'),
+      ('c1', 'string', {'indexed': True}),
       ('c2', 'integer'),
       ('c3', 'datetime')
     )

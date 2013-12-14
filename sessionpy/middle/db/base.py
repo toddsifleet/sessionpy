@@ -1,5 +1,11 @@
 from functools import partial
 
+def transform_column(column):
+  name = column[0]
+  data_type = column[1]
+  args = column[2] if len(column) == 3 else {}
+  return (name, data_type, args)
+
 def commit_after(func):
   def wrapper(self, *args, **kwargs):
     try:
@@ -102,18 +108,34 @@ class Connection(Base):
 class TableManager(Base):
   create_sql = 'CREATE TABLE {table_name} ({columns})'
   drop_table_sql = 'DROP TABLE IF EXISTS {table_name}'
-
+  index_sql = 'CREATE INDEX {index_name} ON {table_name} ({column_name})'
   def __init__(self, connection, cursor):
     self.connection = connection
     self.cursor = cursor
 
   @commit_after
   def create_table(self, table_name, *columns):
+    columns = map(transform_column, columns)
     sql = [self.column_sql(*c) for c in columns]
     sql += self.table_constraints_sql(*columns)
     self.sql(self.create_sql,
       table_name =  table_name,
       columns = ", ".join(filter(bool, sql)),
+    )
+    self.create_indexes(table_name, columns)
+
+  @commit_after
+  def create_indexes(self, table_name, columns):
+    indexed_columns = [c for c in columns if c[2].get('indexed', None)]
+    for c in indexed_columns:
+      self.create_index(table_name, c)
+
+  @commit_after
+  def create_index(self, table_name, column):
+    self.sql(self.index_sql,
+      table_name = self.quote_if_needed(table_name),
+      column_name = self.quote_if_needed(column[0]),
+      index_name = '_'.join([table_name, column[0], 'index'])
     )
 
   @commit_after

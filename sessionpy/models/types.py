@@ -54,6 +54,7 @@ class Relationship(Column):
     self.name = model.name
     self.args = {
       'foreign_key': (model.table_name, 'id')
+      # 'indexed': True
     }
 
   def update_model(self, model):
