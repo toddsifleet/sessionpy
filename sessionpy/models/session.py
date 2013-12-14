@@ -1,6 +1,6 @@
 from models.base import Model
 from models.user import User
-from models.types import String, Integer, DateTime, Owner
+from models.types import String, DateTime, Owner
 
 class Session(Model):
   columns = (
