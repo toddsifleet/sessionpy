@@ -200,5 +200,9 @@ class Result(object):
       self.first_item = False
       return self.first
     else:
-      return self.get_row()
+      r =  self.get_row()
+      if r:
+        return r
+      else:
+        raise StopIteration()
 

@@ -73,7 +73,7 @@ class Model(object):
   def insert(self):
     keys = [c.name for c in self.columns]
     values = map(self.to_db, self.values())
-    kwargs = dict(zip(keys,values))
+    kwargs = dict(zip(keys,values)[1::])
     self.id = self.db.insert(
       self.table_name,
       True,
