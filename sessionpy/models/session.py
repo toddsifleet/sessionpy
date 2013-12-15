@@ -6,5 +6,8 @@ class Session(Model):
   columns = (
     Owner(User, null = False),
     DateTime('expires_at'),
-    String('token', unique = True),
+    String('token',
+      unique = True,
+      indexed = True
+    ),
   )

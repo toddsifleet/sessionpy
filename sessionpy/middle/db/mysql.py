@@ -5,12 +5,12 @@ import base
 
 class Connection(base.Connection):
   bind_char = '%s'
-  def connect(self, db_name):
+  def connect(self, *args, **kwargs):
     self.connection = mdb.connect(
-      'localhost',
-      'testuser',
-      'test623',
-      'sessionpy_test',
+      kwargs['host'],
+      kwargs['user'],
+      kwargs['password'],
+      kwargs['db'],
       cursorclass = MySQLdb.cursors.DictCursor
     )
 

@@ -6,7 +6,10 @@ from models.types import String
 
 class User(Model):
   columns = (
-    String('username', unique = True),
+    String('username',
+      unique = True,
+      indexed = True
+    ),
     String('email', unique = True),
     String('password', length = 512),
     String('salt', length = 512),

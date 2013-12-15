@@ -11,8 +11,9 @@ class Base(base.Base):
       return v
 
 class Connection(Base, base.Connection):
-  def connect(self, db_name):
-    self.connection = psycopg2.connect("dbname=test user=toddsifleet")
+  def connect(self, *args, **kwargs):
+    key_values = [a + '=' + b for a,b in kwargs.items()]
+    self.connection = psycopg2.connect(" ".join(key_values))
     self.cursor =self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)# self.get_cursor()
     self.table_manager = TableManager(self.connection, self.cursor)
 

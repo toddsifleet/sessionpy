@@ -33,9 +33,17 @@ class Base(object):
     if db == 'sqlite':
       return sqlite.Connection(cls.file_handle.name)
     elif db == 'mysql':
-      return mysql.Connection('test')
+      return mysql.Connection(
+        host = 'localhost',
+        user = 'testuser',
+        password = 'test623',
+        db = 'sessionpy_test'
+      )
     elif db == 'postgres':
-      return postgres.Connection('test')
+      return postgres.Connection(
+        dbname = 'test',
+        user = 'toddsifleet'
+      )
 
   @classmethod
   def teardown_class(cls):
