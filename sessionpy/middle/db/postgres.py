@@ -9,8 +9,6 @@ class Base(base.Base):
       return '"' + v + '"'
     else:
       return v
-  def create_index(self, *args, **kwargs):
-    pass
 
 class Connection(Base, base.Connection):
   def connect(self, db_name):

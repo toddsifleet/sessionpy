@@ -64,11 +64,8 @@ class Connection(Base):
       table_name = table_name
     )
 
-    return Result(self, cursor)
+    return Result(cursor)
 
-  def get_row(self, cursor = None):
-    cursor = cursor or self.cursor
-    return cursor.fetchone()
 
   @commit_after
   def delete(self, table_name, column, value):
@@ -210,8 +207,7 @@ class TableManager(Base):
     )
 
 class Result(object):
-  def __init__(self, connection, cursor):
-    self.connection = connection
+  def __init__(self, cursor):
     self.cursor = cursor
     self.first = self.get_row()
 
@@ -231,9 +227,4 @@ class Result(object):
         raise StopIteration()
 
   def get_row(self):
-    r = self.connection.get_row(self.cursor)
-    if r:
-      print type(r), r
-    else:
-      print 'none'
-    return r
+    return self.cursor.fetchone()
