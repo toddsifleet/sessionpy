@@ -39,8 +39,9 @@ class ModelMeta(type):
       self.table_name = self.name + 's'
 
   def set_column_names(self):
-    self.column_names = [c.name for c in self.columns]
+    self.column_names = [c.column_name for c in self.columns]
     self.audit_names = [c.name for c in self.audit_columns]
+    self.attr_names = [c.name for c in self.columns]
 
 class Model(object):
   __metaclass__ = ModelMeta
@@ -56,7 +57,7 @@ class Model(object):
       if c not in kwargs:
         kwargs[c] = datetime.today().replace(microsecond=0)
 
-    for c in self.column_names:
+    for c in self.attr_names:
       v = kwargs.get(c, None)
       setattr(self, c, v)
 
@@ -71,7 +72,7 @@ class Model(object):
     return v
 
   def insert(self):
-    keys = [c.name for c in self.columns]
+    keys = [c.column_name for c in self.columns]
     values = map(self.to_db, self.values())
     kwargs = dict(zip(keys,values)[1::])
     self.id = self.db.insert(
@@ -125,8 +126,8 @@ class Model(object):
   @classmethod
   def create(cls, **kwargs):
     for c in kwargs:
-      if c not in cls.column_names:
-        raise Exception(cls.column_names)
+      if c not in cls.attr_names:
+        raise Exception([cls.attr_names, cls.column_names])
         raise Exception("{name} Model does not have the attribute `{c}`".format(
           name = cls.table_name,
           c = c
@@ -136,8 +137,8 @@ class Model(object):
   @classmethod
   def _from_row(cls, row):
     args = {}
-    for x in row:
-      args[x] = cls.from_db(row[x])
+    for c in cls.columns:
+      args[c.name] = cls.from_db(row[c.column_name])
     return cls(**args)
 
   @classmethod

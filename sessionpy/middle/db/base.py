@@ -46,7 +46,7 @@ class Base(object):
       **kwargs
     )
 
-    print sql, binds
+    print sql, binds, cursor
     cursor.execute(sql, binds)
     return cursor
 
@@ -64,9 +64,10 @@ class Connection(Base):
       table_name = table_name
     )
 
-    return Result(cursor, self.get_row)
+    return Result(self, cursor)
 
-  def get_row(self, cursor):
+  def get_row(self, cursor = None):
+    cursor = cursor or self.cursor
     return cursor.fetchone()
 
   @commit_after
@@ -134,7 +135,7 @@ class TableManager(Base):
   def create_index(self, table_name, column):
     self.sql(self.index_sql,
       table_name = self.quote_if_needed(table_name),
-      column_name = self.quote_if_needed(column[0]),
+      column_name = column[0],
       index_name = '_'.join([table_name, column[0], 'index'])
     )
 
@@ -209,8 +210,9 @@ class TableManager(Base):
     )
 
 class Result(object):
-  def __init__(self, cursor, get_row):
-    self.get_row = partial(get_row, cursor)
+  def __init__(self, connection, cursor):
+    self.connection = connection
+    self.cursor = cursor
     self.first = self.get_row()
 
   def __iter__(self):
@@ -228,3 +230,10 @@ class Result(object):
       else:
         raise StopIteration()
 
+  def get_row(self):
+    r = self.connection.get_row(self.cursor)
+    if r:
+      print type(r), r
+    else:
+      print 'none'
+    return r

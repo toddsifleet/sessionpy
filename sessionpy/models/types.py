@@ -5,6 +5,7 @@ class Column(object):
   null = True
   def __init__(self, name, **kwargs):
     self.name = name
+    self.column_name = name
     self.unique = kwargs.pop('unique', self.unique)
     self.null = kwargs.pop('null', self.null)
     self.args = kwargs
@@ -18,7 +19,7 @@ class Column(object):
       'not_null': not self.null
     }
     args.update(self.args)
-    return (self.name, self.column_type, args)
+    return (self.column_name, self.column_type, args)
 
   def update_model(self, model):
     return self.add_find_by(model)
@@ -28,9 +29,9 @@ class Column(object):
     def find(unique, column, value):
       return model.select(column, value, unique)
     if self.is_unique():
-      setattr(model, name, partial(find, True, self.name))
+      setattr(model, name, partial(find, True, self.column_name))
     else:
-      setattr(model, name, partial(find, False, self.name))
+      setattr(model, name, partial(find, False, self.column_name))
 
 class String(Column):
   column_type = 'string'
@@ -52,9 +53,10 @@ class Relationship(Column):
     self.null = null
     self.related_type = model
     self.name = model.name
+    self.column_name = self.name + '_id'
     self.args = {
-      'foreign_key': (model.table_name, 'id')
-      # 'indexed': True
+      'foreign_key': (model.table_name, 'id'),
+      'indexed': True
     }
 
   def update_model(self, model):
@@ -64,7 +66,7 @@ class Relationship(Column):
     setattr(model, 'fetch_' + self.name, find)
 
     def find(p):
-      return model.select(self.name, p.id, False)
+      return model.select(self.column_name, p.id, False)
 
     setattr(self.related_type, model.name + 's', find)
 

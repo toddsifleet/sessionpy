@@ -4,15 +4,18 @@ import base
 
 class Base(base.Base):
   def quote_if_needed(self, v):
+    return v
     if v in ['user']:
       return '"' + v + '"'
     else:
       return v
+  def create_index(self, *args, **kwargs):
+    pass
 
-class Connection(base.Connection, Base):
+class Connection(Base, base.Connection):
   def connect(self, db_name):
     self.connection = psycopg2.connect("dbname=test user=toddsifleet")
-    self.cursor = self.get_cursor()
+    self.cursor =self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)# self.get_cursor()
     self.table_manager = TableManager(self.connection, self.cursor)
 
   def get_insert_sql(self, return_id):
@@ -29,7 +32,7 @@ class Connection(base.Connection, Base):
     return self.connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
-class TableManager(base.TableManager, Base):
+class TableManager(Connection, base.TableManager):
   def primary_key_sql(self, *args, **kwargs):
     return 'serial primary key'
 
