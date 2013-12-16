@@ -24,23 +24,24 @@ class Base(object):
   @classmethod
   def setup_class(cls):
     cls.file_handle = tempfile.NamedTemporaryFile(delete = False)
-    conn = cls.connect()
-    Authenticator(conn)
+    cls.connect()
 
   @classmethod
   def connect(cls):
     db = pytest.config.getoption('--db')
     if db == 'sqlite':
-      return sqlite.Connection(cls.file_handle.name)
+      return Authenticator('sqlite',
+        db_name = cls.file_handle.name
+      )
     elif db == 'mysql':
-      return mysql.Connection(
+      return Authenticator('mysql',
         host = 'localhost',
         user = 'testuser',
         password = 'test623',
         db = 'sessionpy_test'
       )
     elif db == 'postgres':
-      return postgres.Connection(
+      return Authenticator('postgres' ,
         dbname = 'test',
         user = 'toddsifleet'
       )
@@ -64,9 +65,6 @@ class TestDummyModel(Base):
     model_types = [DummyModel, DummyOwner]
     map(lambda x: x.drop_table(), model_types)
     map(lambda x: x.init_table(), model_types[::-1])
-
-  def teardown(self):
-    DummyOwner.drop_table()
 
   def test_audit(self):
     created_at = test_utils.days_ago(30)
