@@ -7,6 +7,17 @@ Goals
 ============
 
 * Completely database agnostic.
+    * MySql
+    * Postgres
+    * Sqlite
+    * more? (to come)
+* Super simple usage:
+    * config.py
+        * set db attrs
+        * set pw hash atts
+        * more? (to come)
+    * sessionpy.py init => create all necessary tables
+
 * Authenticate users in with username/email and password.
 * Authenticate users with email/remember me tokens.
 * Create and manage sessions for authenticated users
