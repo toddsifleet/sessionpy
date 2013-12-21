@@ -131,7 +131,6 @@ class Query(Base):
 class QueryWithoutId(Base):
   def setup(self):
     super(QueryWithoutId, self).setup()
-    self.drop_table('test_child_table')
     self.drop_table('test_table')
     self.table_manager.create_table('test_table',
       ('c1', 'string'),
