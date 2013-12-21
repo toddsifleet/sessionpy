@@ -183,6 +183,9 @@ class TableManager(Base):
   def integer_sql(self, *args, **kwargs):
     return 'INTEGER'
 
+  def boolean_sql(self, *args, **kwargs):
+    return 'BOOLEAN'
+
   def not_null_sql(self, *args, **kwargs):
     return 'NOT NULL'
 

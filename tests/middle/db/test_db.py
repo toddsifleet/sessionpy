@@ -34,8 +34,10 @@ class Base(object):
       ('id', 'primary_key'),
       ('c1', 'string', {'indexed': True}),
       ('c2', 'integer'),
-      ('c3', 'datetime')
+      ('c3', 'datetime'),
+      ('c4', 'boolean')
     )
+
 
   def setup(self):
     self.db.start_transaction()
@@ -47,6 +49,18 @@ class Query(Base):
   def setup(self):
     super(Query, self).setup()
     self.create_test_table()
+
+  def test_false_boolean(self):
+    id = self.insert_dummy_row(c4 = False)
+    result = self.db.select('test_table', 'id', id).first
+
+    assert result['c4'] == False
+
+  def test_true_boolean(self):
+    id = self.insert_dummy_row(c4 = True)
+    result = self.db.select('test_table', 'id', id).first
+
+    assert result['c4'] == True
 
   def test_select(self):
     time = test_utils.now()
