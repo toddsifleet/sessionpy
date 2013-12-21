@@ -11,7 +11,7 @@ Goals
     * Postgres
     * Sqlite
     * more? (to come)
-* Super simple usage:
+* Super simple usage.
     * config.py
         * set db attrs
         * set pw hash atts

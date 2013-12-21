@@ -30,21 +30,13 @@ class Base(object):
   def connect(cls):
     db = pytest.config.getoption('--db')
     if db == 'sqlite':
-      return Authenticator('sqlite',
-        db_name = cls.file_handle.name
+      return Authenticator('sqlite.config',
+        db = {
+          'db': cls.file_handle.name
+        }
       )
-    elif db == 'mysql':
-      return Authenticator('mysql',
-        host = 'localhost',
-        user = 'testuser',
-        password = 'test623',
-        db = 'sessionpy_test'
-      )
-    elif db == 'postgres':
-      return Authenticator('postgres' ,
-        dbname = 'test',
-        user = 'toddsifleet'
-      )
+    else:
+      return Authenticator(db + '.config')
 
   @classmethod
   def teardown_class(cls):

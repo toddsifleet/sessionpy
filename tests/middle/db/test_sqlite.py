@@ -7,7 +7,7 @@ class Base(test_db.Base):
   @classmethod
   def connect(cls):
     cls.file_handle = tempfile.NamedTemporaryFile(delete = False)
-    return sqlite.Connection(cls.file_handle.name)
+    return sqlite.Connection(db = cls.file_handle.name)
 
 class TestQuery(test_db.Query, Base):
   @classmethod

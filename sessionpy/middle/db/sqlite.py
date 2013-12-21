@@ -9,8 +9,11 @@ def dict_factory(cursor, row):
 
 class Connection(base.Connection):
   bind_char = '?'
-  def connect(self, db_name):
-    self.connection = sqlite3.connect(db_name, detect_types=sqlite3.PARSE_DECLTYPES)
+  def connect(self, **kwargs):
+    self.connection = sqlite3.connect(
+      kwargs['db'],
+      detect_types=sqlite3.PARSE_DECLTYPES
+    )
     self.connection.execute('PRAGMA foreign_keys = ON;')
     self.connection.row_factory = dict_factory
     self.cursor = self.get_cursor()
