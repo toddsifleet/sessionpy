@@ -5,7 +5,7 @@ class Base(test_db.Base):
   @classmethod
   def connect(cls):
     return postgres.Connection(
-      dbname = 'test',
+      dbname = 'sessionpy_test',
       user = 'toddsifleet'
     )
 

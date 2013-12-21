@@ -1,0 +1,15 @@
+#define db configuartion
+db = {
+  'type': 'sqlite',
+  'path_to_db': 'sessionpy.db',
+
+  # data for mysql/postgres
+  'username': None,
+  'password': None,
+  'host': None
+}
+
+# define pw hashing configuartion
+
+hash = {
+}
