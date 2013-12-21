@@ -29,24 +29,23 @@ class Base(object):
   @classmethod
   def connect(cls):
     db = pytest.config.getoption('--db')
+    base_path = '/Users/toddsifleet/Dropbox/github/sessionpy/tests/models/'
     if db == 'sqlite':
-      return Authenticator('sqlite.config',
+      cls.authenticator = Authenticator(base_path + 'sqlite.config',
         db = {
           'db': cls.file_handle.name
         }
       )
     else:
-      return Authenticator(db + '.config')
+      cls.authenticator = Authenticator(base_path + db + '.config')
 
   @classmethod
   def teardown_class(cls):
     os.unlink(cls.file_handle.name)
 
   def setup(self):
-    Session.drop_table()
-    User.drop_table()
-    User.init_table()
-    Session.init_table()
+    self.authenticator.drop_tables()
+    self.authenticator.init_tables()
 
   def teardown(self):
     pass
