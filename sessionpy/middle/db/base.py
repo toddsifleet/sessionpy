@@ -56,12 +56,26 @@ class Connection(Base):
   delete_sql = 'DELETE FROM {table_name} WHERE {column} = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
+  limit_sql = ' LIMIT {limit}'
+  order_by_sql = ' ORDER BY {order_by}'
+  offset_sql = ' OFFSET {offset}'
 
-  def select(self, table_name, column, value):
-    cursor = self.sql(self.select_sql, value,
+  def select(self, table_name, column, value, limit = None, offset = None, order_by = None):
+    sql = self.select_sql
+    if order_by:
+      sql += self.order_by_sql
+    if limit:
+      sql += self.limit_sql
+    if offset:
+      sql += self.offset_sql
+
+    cursor = self.sql(sql, value,
       cursor = self.get_cursor(),
       column = self.quote_if_needed(column),
-      table_name = table_name
+      table_name = table_name,
+      limit = limit,
+      order_by = order_by,
+      offset = offset
     )
 
     return Result(cursor)

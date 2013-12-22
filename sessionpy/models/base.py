@@ -182,9 +182,9 @@ class Model(object):
     return cls.db.sql(input, binds)
 
   @classmethod
-  def select(cls, column, value, unique = True):
+  def select(cls, column, value, unique = True, **kwargs):
     v = value.id if hasattr(value, 'id') else value
-    result = cls.db.select(cls.table_name, column, v)
+    result = cls.db.select(cls.table_name, column, v, **kwargs)
     if unique:
       return cls._from_row(result.first)
     else:

@@ -62,6 +62,30 @@ class Query(Base):
 
     assert result['c4'] == True
 
+  def test_limit(self):
+    self.insert_dummy_rows(10)
+    result = self.db.select('test_table', 'c1', 'test_string', limit = 2)
+
+    assert len(list(result)) == 2
+
+  def test_order(self):
+    ids = self.insert_dummy_rows(10)
+    args = ('test_table', 'c1', 'test_string')
+    result_asc = self.db.select(*args, order_by = 'id asc')
+    result_desc = self.db.select(*args, order_by = 'id desc')
+    for a, b in zip(result_desc, reversed(list(result_asc))):
+      assert a == b
+
+  def test_offset(self):
+    ids = self.insert_dummy_rows(10)
+    args = ('test_table', 'c1', 'test_string')
+    result = self.db.select(*args, order_by = 'id asc', offset = 2, limit = 2)
+    result = list(result)
+
+    assert len(result) == 2
+    assert result[0]['id'] == ids[2]
+    assert result[1]['id'] == ids[3]
+
   def test_select(self):
     time = test_utils.now()
     row = self.insert_dummy_row(c3 = time)
