@@ -23,6 +23,9 @@ class Base(object):
     }
 
     vals.update(kwargs)
+    for k,v in vals.items():
+      if v is None:
+        del vals[k]
     return self.db.insert('test_table', return_id, **vals)
 
   def drop_table(self, table_name):
@@ -66,25 +69,31 @@ class Query(Base):
     self.insert_dummy_rows(10)
     result = self.db.select('test_table', 'c1', 'test_string', limit = 2)
 
-    assert len(list(result)) == 2
+    assert len(result.all) == 2
 
   def test_order(self):
     ids = self.insert_dummy_rows(10)
     args = ('test_table', 'c1', 'test_string')
     result_asc = self.db.select(*args, order_by = 'id asc')
     result_desc = self.db.select(*args, order_by = 'id desc')
-    for a, b in zip(result_desc, reversed(list(result_asc))):
+    for a, b in zip(result_desc.all, reversed(result_asc.all)):
       assert a == b
 
   def test_offset(self):
     ids = self.insert_dummy_rows(10)
     args = ('test_table', 'c1', 'test_string')
-    result = self.db.select(*args, order_by = 'id asc', offset = 2, limit = 2)
-    result = list(result)
+    result = self.db.select(*args, order_by = 'id asc', offset = 2, limit = 2).all
 
     assert len(result) == 2
     assert result[0]['id'] == ids[2]
     assert result[1]['id'] == ids[3]
+
+  def test_first(self):
+    ids = self.insert_dummy_rows(10)
+    result = self.db.select('test_table', 'c1', 'test_string')
+
+    assert result.first == result.first
+    assert result.first == result.all[0]
 
   def test_select(self):
     time = test_utils.now()
@@ -98,8 +107,33 @@ class Query(Base):
   def test_select_multiple_results(self):
     ids = self.insert_dummy_rows(5)
     results = self.db.select('test_table', 'c1', 'test_string')
-    for id, row in zip(ids, results):
+    for id, row in zip(ids, results.all):
       assert row['id'] == id
+
+  def test_select_does_not_block(self):
+    ids = self.insert_dummy_rows(5)
+    result = self.db.select('test_table', 'c1', 'test_string')
+    assert result.first
+
+    self.insert_dummy_row(c1 = None, c2 = 10)
+    for r in result.all:
+      assert r
+    self.db.commit()
+
+  def test_paginate(self):
+    ids = self.insert_dummy_rows(10)
+    query = self.db.select('test_table', 'c1', 'test_string')
+    first_half = query.paginate(5, 0)
+    second_half = query.paginate(5, 1)
+
+    assert [r['id'] for r in first_half] == ids[0:5]
+    assert [r['id'] for r in second_half] == ids[5:]
+
+  def test_count(self):
+    n = 10
+    self.insert_dummy_rows(n)
+    result = self.db.select('test_table', 'c1', 'test_string')
+    assert result.count == n
 
   def test_multiple_concurrent_selects(self):
     ids_first = self.insert_dummy_rows(5, c1 = 'test_string_1')
@@ -110,8 +144,8 @@ class Query(Base):
     results = zip(
       ids_first,
       ids_second,
-      results_first,
-      results_second
+      results_first.all,
+      results_second.all
     )
 
     for id_1, id_2, r_1, r_2 in results:

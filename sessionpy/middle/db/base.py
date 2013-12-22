@@ -13,6 +13,7 @@ def commit_after(func):
     except Exception as e:
       raise e
     finally:
+      print 'commiting'
       self.commit()
   return wrapper
 
@@ -52,7 +53,7 @@ class Base(object):
 
 
 class Connection(Base):
-  select_sql = 'SELECT * FROM {table_name} WHERE {column} = {bind_char}'
+  select_sql = 'SELECT {select} FROM {table_name} WHERE {column} = {bind_char}'
   delete_sql = 'DELETE FROM {table_name} WHERE {column} = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
@@ -60,22 +61,25 @@ class Connection(Base):
   order_by_sql = 'ORDER BY {order_by}'
   offset_sql = 'OFFSET {offset}'
 
-  def select(self, table_name, column, value, **kwargs):
-    sql = self.select_sql + self.get_select_modifiers_sql(**kwargs)
+  def select(self, *args, **kwargs):
+    return Query(self, *args, **kwargs)
 
-    cursor = self.sql(sql, value,
-      cursor = self.get_cursor(),
-      column = self.quote_if_needed(column),
+  def count(self, table_name, column, value):
+    cursor = self.sql(self.select_sql, value,
       table_name = table_name,
-      **kwargs
+      column = column,
+      select = 'count(*) count'
     )
 
-    return Query(cursor)
+    return self.get_count(cursor)
+
+  def get_count(self, cursor):
+    return cursor.fetchone()['count']
 
   def get_select_modifiers_sql(self, **kwargs):
     modifiers = ['']
     for m in ('order_by', 'limit', 'offset'):
-      if m in kwargs:
+      if kwargs.get(m, None):
         modifiers.append(getattr(self, m + '_sql'))
     return ' '.join(modifiers)
 
@@ -222,24 +226,45 @@ class TableManager(Base):
     )
 
 class Query(object):
-  def __init__(self, cursor):
-    self.cursor = cursor
-    self.first = self.get_row()
+  def __init__(self, db, *args, **kwargs):
+    self.db = db
+    self.select_params = args
+    self.select_modifiers = kwargs
 
-  def __iter__(self):
-    self.first_item = True
-    return self
+  @property
+  def first(self):
+    return self.select(limit = 1).fetchone()
 
-  def next(self):
-    if self.first_item:
-      self.first_item = False
-      return self.first
-    else:
-      r =  self.get_row()
-      if r:
-        return r
-      else:
-        raise StopIteration()
+  @property
+  def count(self):
+    return self.db.count(*self.select_params)
 
-  def get_row(self):
-    return self.cursor.fetchone()
+  @property
+  def all(self):
+    return self.select().fetchall()
+
+  def paginate(self, page_size, page_number = 0):
+    return self.select(
+      limit = page_size,
+      offset = page_size * page_number
+    ).fetchall()
+
+  def get_select_modifiers(self, **kwargs):
+    modifiers = self.select_modifiers.copy()
+    modifiers.update(kwargs)
+    for k,v in modifiers.items():
+      if v is None:
+        del modifiers[k]
+    return modifiers
+
+  def select(self, select = '*', **kwargs):
+    table_name, column, value = self.select_params
+    modifiers = self.get_select_modifiers(**kwargs)
+    sql = self.db.select_sql + self.db.get_select_modifiers_sql(**modifiers)
+    return self.db.sql(sql, value,
+      cursor = self.db.get_cursor(),
+      column = self.db.quote_if_needed(column),
+      select = select,
+      table_name = table_name,
+      **modifiers
+    )

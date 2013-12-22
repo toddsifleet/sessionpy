@@ -188,7 +188,7 @@ class Model(object):
     if unique:
       return cls._from_row(result.first)
     else:
-      return (cls._from_row(x) for x in result)
+      return (cls._from_row(x) for x in result.all)
 
   @classmethod
   def init_table(cls):
