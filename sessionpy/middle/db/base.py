@@ -56,30 +56,28 @@ class Connection(Base):
   delete_sql = 'DELETE FROM {table_name} WHERE {column} = {bind_char}'
   insert_sql = 'INSERT INTO {table_name} ({columns}) VALUES ({values})'
   update_sql = 'UPDATE {table_name} SET {columns} WHERE id = {bind_char}'
-  limit_sql = ' LIMIT {limit}'
-  order_by_sql = ' ORDER BY {order_by}'
-  offset_sql = ' OFFSET {offset}'
+  limit_sql = 'LIMIT {limit}'
+  order_by_sql = 'ORDER BY {order_by}'
+  offset_sql = 'OFFSET {offset}'
 
-  def select(self, table_name, column, value, limit = None, offset = None, order_by = None):
-    sql = self.select_sql
-    if order_by:
-      sql += self.order_by_sql
-    if limit:
-      sql += self.limit_sql
-    if offset:
-      sql += self.offset_sql
+  def select(self, table_name, column, value, **kwargs):
+    sql = self.select_sql + self.get_select_modifiers_sql(**kwargs)
 
     cursor = self.sql(sql, value,
       cursor = self.get_cursor(),
       column = self.quote_if_needed(column),
       table_name = table_name,
-      limit = limit,
-      order_by = order_by,
-      offset = offset
+      **kwargs
     )
 
-    return Result(cursor)
+    return Query(cursor)
 
+  def get_select_modifiers_sql(self, **kwargs):
+    modifiers = ['']
+    for m in ('order_by', 'limit', 'offset'):
+      if m in kwargs:
+        modifiers.append(getattr(self, m + '_sql'))
+    return ' '.join(modifiers)
 
   @commit_after
   def delete(self, table_name, column, value):
@@ -223,7 +221,7 @@ class TableManager(Base):
       foreign_name = foreign_name
     )
 
-class Result(object):
+class Query(object):
   def __init__(self, cursor):
     self.cursor = cursor
     self.first = self.get_row()
