@@ -12,8 +12,8 @@ class Authenticator(object):
   def __init__(self, path_to_config, **kwargs):
     path_to_config = path_to_config
     self.load_config(path_to_config, **kwargs)
-    db_type = self.config.db.pop('type')
-    self.connect(db_type, **self.config.db)
+    self.db_type = self.config.db.pop('type')
+    self.connect(self.db_type, **self.config.db)
     Model.db = self.db
 
   def load_config(self, path_to_config, **kwargs):
@@ -41,6 +41,7 @@ class Authenticator(object):
       from models.admin import AdminUser, AdminSession
       getattr(AdminUser, method_name)()
       getattr(AdminSession, method_name)()
+
 
 
 

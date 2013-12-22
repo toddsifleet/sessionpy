@@ -10,24 +10,32 @@ def propogate(func):
       f = getattr(m, func.func_name, None)
       if f:
         f(*args, **kwargs)
-
     map(call, self.dependents)
     return func(self, *args, **kwargs)
   return wrapper
 
+class classproperty(object):
+  def __init__(self, getter):
+    self._getter = getter
+
+  def __get__(self, instance, owner):
+    return self._getter(owner)
+
 class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
-    self.foreign_keys = {}
     self.dependents = []
     if hasattr(self, 'columns'):
       self.set_table_name(args[0])
       self.update_columns()
-      self.set_column_names()
       self.add_filters()
 
   def update_columns(self):
-    self.columns = (PrimaryKey('id'), ) + self.columns + self.audit_columns
+    columns = (PrimaryKey('id'), ) + self.columns + self.audit_columns
+    column_name_map = dict([(c.name, c) for c in columns])
+    columns = [column_name_map[c.name] for c in columns]
+
+    self.columns = tuple(filter(bool, columns))
 
   def add_filters(self):
     for c in self.columns:
@@ -37,11 +45,6 @@ class ModelMeta(type):
     if not name == 'Model':
       self.name = camel_to_snake(name)
       self.table_name = self.name + 's'
-
-  def set_column_names(self):
-    self.column_names = [c.column_name for c in self.columns]
-    self.audit_names = [c.name for c in self.audit_columns]
-    self.attr_names = [c.name for c in self.columns]
 
 class Model(object):
   __metaclass__ = ModelMeta
@@ -72,9 +75,12 @@ class Model(object):
     return v
 
   def insert(self):
-    keys = [c.column_name for c in self.columns]
-    values = map(self.to_db, self.values())
-    kwargs = dict(zip(keys,values)[1::])
+    kwargs = self.db_hash
+    if kwargs.pop('id'):
+        raise Exception('You can\'t insert a model with an id')
+    for k,v in kwargs.items():
+      if v is None:
+        del kwargs[k]
     self.id = self.db.insert(
       self.table_name,
       True,
@@ -82,8 +88,21 @@ class Model(object):
     )
     return self
 
+  @property
   def values(self):
     return [getattr(self, k.name) for k in self.columns]
+
+  @classproperty
+  def column_names(self):
+    return [c.column_name for c in self.columns]
+
+  @classproperty
+  def audit_names(self):
+    return [c.name for c in self.audit_columns]
+
+  @classproperty
+  def attr_names(self):
+    return [c.name for c in self.columns]
 
   def put(self):
     self.db.update(
@@ -93,12 +112,18 @@ class Model(object):
     return self
 
   def to_dict(self):
-    return dict(zip(self.columns, self.values()))
+    return dict(zip(self.attr_names, self.values))
+
+  @property
+  def db_hash(self):
+    values = [self.to_db(v) for v in self.values]
+    return dict(zip(self.column_names, values))
 
   def update(self, **kwargs):
     self.updated_at = datetime.today()
     for k, v in kwargs.items():
       setattr(self, k, v)
+
     self.db.update(
       self.table_name,
       id = self.id,
@@ -117,11 +142,20 @@ class Model(object):
   def __eq__(self, other_model):
     if not isinstance(other_model, type(self)):
       return False
+    self.dump()
+    other_model.dump()
+    for k, v in zip(self.attr_names, self.values):
+      if not hasattr(other_model, k):
+        return False
 
-    for x, y in zip (self.values(), other_model.values()):
-      if not x == y:
+      other_v = self.to_db(getattr(other_model, k))
+      if not other_v == self.to_db(v):
         return False
     return True
+
+  def dump(self):
+    for k, v in zip(self.attr_names, self.values):
+      print k, v
 
   @classmethod
   def create(cls, **kwargs):
@@ -136,6 +170,8 @@ class Model(object):
 
   @classmethod
   def _from_row(cls, row):
+    if row is None:
+      return None
     args = {}
     for c in cls.columns:
       args[c.name] = cls.from_db(row[c.column_name])

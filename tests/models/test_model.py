@@ -41,14 +41,17 @@ class Base(object):
 
   @classmethod
   def teardown_class(cls):
+    Model.db.commit()
     os.unlink(cls.file_handle.name)
 
+  @classmethod
   def setup(self):
+    Model.db.start_transaction()
     self.authenticator.drop_tables()
     self.authenticator.init_tables()
 
   def teardown(self):
-    pass
+    Model.db.rollback()
 
 
 class TestDummyModel(Base):

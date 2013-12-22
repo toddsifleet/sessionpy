@@ -31,7 +31,8 @@ class TestSession(Base):
       Session.create(user = user),
       Session.create(user = user)
     ]
-    sessions = [s.id for s in sessions]
-    assert sessions == [s.id for s in Session.find_by_user(user)]
+
+    for session in Session.find_by_user(user):
+      assert session in sessions
 
 

@@ -28,7 +28,7 @@ class Base(object):
     self.connection.commit()
 
   def start_transaction(self):
-    print 'Transaction Starrted'
+    print 'Transaction Started'
     self.cursor.execute('BEGIN')
 
   def rollback(self):

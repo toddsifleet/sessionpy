@@ -17,9 +17,6 @@ class Connection(base.Connection):
     self.cursor = self.get_cursor()
     self.table_manager = TableManager(self.connection, self.cursor)
 
-  def datetime_sql(self, *args, **kwargs):
-    return 'TIMESTAMP'
-
 
 class TableManager(base.TableManager):
   create_sql = 'CREATE TABLE {table_name} ({columns})'
@@ -32,4 +29,7 @@ class TableManager(base.TableManager):
 
   def primary_key_table_sql(self, column_name):
     return 'PRIMARY KEY ({column_name})'.format(column_name = column_name)
+
+  def datetime_sql(self, *args, **kwargs):
+    return 'TIMESTAMP DEFAULT 0'
 
