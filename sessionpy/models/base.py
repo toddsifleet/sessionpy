@@ -1,4 +1,4 @@
-from middle.db.base import Query
+import middle.db.base
 from functools import partial
 import re
 from datetime import datetime
@@ -205,6 +205,9 @@ class Model(object):
   @classmethod
   def add_dependent(self, model):
     self.dependents.append(model)
+
+class Query(middle.db.base.Query):
+  pass
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile('([a-z0-9])([A-Z])')
