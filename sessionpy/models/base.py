@@ -203,7 +203,8 @@ class Model(object):
 
   @classmethod
   def add_dependent(self, model):
-    self.dependents.append(model)
+    if model not in self.dependents:
+      self.dependents.append(model)
 
 class Result(Result):
   def __init__(self, model, source):
