@@ -23,12 +23,11 @@ class classproperty(object):
     return self._getter(owner)
 
 class ModelMeta(type):
-  def __init__(self, *args):
-    type.__init__(self, *args)
-    self.dependents = []
-    # if not name == 'Model':
-    if hasattr(self, 'columns'):
-      self.set_table_name(args[0])
+  def __init__(self, model_name, *args):
+    type.__init__(self, model_name, *args)
+    if not model_name == 'Model':
+      self.dependents = []
+      self.set_table_name(model_name)
       self.update_columns()
       self.add_filters()
 
@@ -44,9 +43,8 @@ class ModelMeta(type):
       c.update_model(self)
 
   def set_table_name(self, name):
-    if not name == 'Model':
-      self.name = camel_to_snake(name)
-      self.table_name = self.name + 's'
+    self.name = camel_to_snake(name)
+    self.table_name = self.name + 's'
 
 class Model(object):
   __metaclass__ = ModelMeta
