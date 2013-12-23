@@ -1,3 +1,4 @@
+from middle.db.base import Query
 from functools import partial
 import re
 from datetime import datetime

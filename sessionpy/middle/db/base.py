@@ -1,10 +1,22 @@
 from functools import partial
 
-def transform_column(column):
+def ensure_options_hash(column):
   name = column[0]
   data_type = column[1]
-  args = column[2] if len(column) == 3 else {}
-  return (name, data_type, args)
+  options = column[2] if len(column) == 3 else {}
+  return (name, data_type, options)
+
+def transform_row(func):
+  def wrapper(self, *args, **kwargs):
+    rows = func(self, *args, **kwargs)
+    return self.transform(rows)
+  return wrapper
+
+def transform_rows(func):
+  def wrapper(self, *args, **kwargs):
+    rows = func(self, *args, **kwargs)
+    return [self.transform(r) for r in rows]
+  return wrapper
 
 def commit_after(func):
   def wrapper(self, *args, **kwargs):
@@ -135,7 +147,7 @@ class TableManager(Base):
 
   @commit_after
   def create_table(self, table_name, *columns):
-    columns = map(transform_column, columns)
+    columns = map(ensure_options_hash, columns)
     sql = [self.column_sql(*c) for c in columns]
     sql += self.table_constraints_sql(*columns)
     self.sql(self.create_sql,
@@ -237,7 +249,11 @@ class Query(object):
     self.select_params = args
     self.select_modifiers = kwargs
 
+  def transform(self, row):
+    return row
+
   @property
+  @transform_row
   def first(self):
     return self.select(limit = 1).fetchone()
 
@@ -247,9 +263,11 @@ class Query(object):
     return self.db.count(*self.select_params, limit = limit)
 
   @property
+  @transform_rows
   def all(self):
     return self.select().fetchall()
 
+  @transform_rows
   def paginate(self, page_size, page_number = 0):
     return self.select(
       limit = page_size,
