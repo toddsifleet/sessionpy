@@ -10,10 +10,8 @@ def commit_after(func):
   def wrapper(self, *args, **kwargs):
     try:
       return func(self, *args, **kwargs)
-    except Exception as e:
-      raise e
     finally:
-      print 'commiting'
+      print 'Commiting'
       self.commit()
   return wrapper
 
@@ -64,11 +62,13 @@ class Connection(Base):
   def select(self, *args, **kwargs):
     return Query(self, *args, **kwargs)
 
-  def count(self, table_name, column, value):
-    cursor = self.sql(self.select_sql, value,
+  def count(self, table_name, column, value, **kwargs):
+    sql = self.get_select_sql(**kwargs)
+    cursor = self.sql(sql, value,
       table_name = table_name,
       column = column,
-      select = 'count(*) count'
+      select = 'count(*) count',
+      **kwargs
     )
 
     return self.get_count(cursor)
@@ -76,8 +76,14 @@ class Connection(Base):
   def get_count(self, cursor):
     return cursor.fetchone()['count']
 
+  def get_select_sql(self, **kwargs):
+    return ' '.join([
+      self.select_sql,
+      self.get_select_modifiers_sql(**kwargs)
+    ])
+
   def get_select_modifiers_sql(self, **kwargs):
-    modifiers = ['']
+    modifiers = []
     for m in ('order_by', 'limit', 'offset'):
       if kwargs.get(m, None):
         modifiers.append(getattr(self, m + '_sql'))
@@ -237,7 +243,8 @@ class Query(object):
 
   @property
   def count(self):
-    return self.db.count(*self.select_params)
+    limit = self.select_modifiers.get('limit', None)
+    return self.db.count(*self.select_params, limit = limit)
 
   @property
   def all(self):
@@ -260,7 +267,7 @@ class Query(object):
   def select(self, select = '*', **kwargs):
     table_name, column, value = self.select_params
     modifiers = self.get_select_modifiers(**kwargs)
-    sql = self.db.select_sql + self.db.get_select_modifiers_sql(**modifiers)
+    sql = self.db.get_select_sql(**modifiers)
     return self.db.sql(sql, value,
       cursor = self.db.get_cursor(),
       column = self.db.quote_if_needed(column),
