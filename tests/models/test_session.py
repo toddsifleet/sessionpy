@@ -32,7 +32,7 @@ class TestSession(Base):
       Session.create(user = user)
     ]
 
-    for session in Session.find_by_user(user):
+    for session in Session.find_by_user(user).all:
       assert session in sessions
 
 

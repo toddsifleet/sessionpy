@@ -78,7 +78,7 @@ class TestDummyModel(Base):
     dummy = DummyModel.create(not_unique_col = 'test_string')
     DummyModel.create(not_unique_col = 'test_string_2')
     result = DummyModel.find_by_not_unique_col('test_string')
-    assert result.next() == dummy
+    assert result.first == dummy
 
   def test_invalid_create_param(self):
     with pytest.raises(Exception):
@@ -94,5 +94,5 @@ class TestDummyModel(Base):
     assert owned.fetch_dummy_owner() == owner
 
     owner = DummyOwner.find_by_id(owner.id)
-    assert owned in owner.dummy_models()
+    assert owned in owner.dummy_models().all
 

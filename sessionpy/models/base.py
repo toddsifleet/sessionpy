@@ -186,10 +186,11 @@ class Model(object):
   def select(cls, column, value, unique = True, **kwargs):
     v = value.id if hasattr(value, 'id') else value
     result = cls.db.select(cls.table_name, column, v, **kwargs)
+    result.transform = cls._from_row
     if unique:
-      return cls._from_row(result.first)
+      return result.first
     else:
-      return (cls._from_row(x) for x in result.all)
+      return result
 
   @classmethod
   def init_table(cls):
