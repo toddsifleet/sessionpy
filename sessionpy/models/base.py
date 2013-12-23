@@ -188,7 +188,10 @@ class Model(object):
     if unique:
       return cls._from_row(result.first)
     else:
-      return Result(cls, result)
+      result.transform = cls._from_row
+      return result
+      # TODO: Decide which way is better
+      # return Result(cls, result)
 
   @classmethod
   def init_table(cls):
