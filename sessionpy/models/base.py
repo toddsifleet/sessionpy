@@ -1,4 +1,4 @@
-import middle.db.base
+from middle.db.base import transform_rows, transform_row, Result
 from functools import partial
 import re
 from datetime import datetime
@@ -26,6 +26,7 @@ class ModelMeta(type):
   def __init__(self, *args):
     type.__init__(self, *args)
     self.dependents = []
+    # if not name == 'Model':
     if hasattr(self, 'columns'):
       self.set_table_name(args[0])
       self.update_columns()
@@ -186,11 +187,10 @@ class Model(object):
   def select(cls, column, value, unique = True, **kwargs):
     v = value.id if hasattr(value, 'id') else value
     result = cls.db.select(cls.table_name, column, v, **kwargs)
-    result.transform = cls._from_row
     if unique:
-      return result.first
+      return cls._from_row(result.first)
     else:
-      return result
+      return Result(cls, result)
 
   @classmethod
   def init_table(cls):
@@ -207,8 +207,16 @@ class Model(object):
   def add_dependent(self, model):
     self.dependents.append(model)
 
-class Query(middle.db.base.Query):
-  pass
+class Result(Result):
+  def __init__(self, model, source):
+    self.model = model
+    self.db = source.db
+    self.select_params = source.select_params
+    self.select_modifiers = source.select_modifiers
+
+  def transform(self, row):
+    return self.model._from_row(row)
+
 
 _underscorer1 = re.compile(r'(.)([A-Z][a-z]+)')
 _underscorer2 = re.compile('([a-z0-9])([A-Z])')

@@ -72,7 +72,7 @@ class Connection(Base):
   offset_sql = 'OFFSET {offset}'
 
   def select(self, *args, **kwargs):
-    return Query(self, *args, **kwargs)
+    return Result(self, *args, **kwargs)
 
   def count(self, table_name, column, value, **kwargs):
     sql = self.get_select_sql(**kwargs)
@@ -243,7 +243,7 @@ class TableManager(Base):
       foreign_name = foreign_name
     )
 
-class Query(object):
+class Result(object):
   def __init__(self, db, *args, **kwargs):
     self.db = db
     self.select_params = args
